@@ -12,7 +12,8 @@
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "posttest": "npm run lint"
+    "posttest": "npm run lint",
+    "preinstall": "npx npm-force-resolutions"
   },
   "repository": {
     "type": "git",
@@ -42,5 +43,9 @@
   "dependencies": {
     "actions-on-google": "^2.13.0",
     "express": "^4.17.1"
+  },
+  "resolutions": {
+    "axios": "0.21.1",
+    "node-forge": "0.10.0"
   }
 }
