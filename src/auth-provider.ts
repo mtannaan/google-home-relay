@@ -1,5 +1,6 @@
 // Originally from https://github.com/actions-on-google/smart-home-nodejs/blob/450b3216e0630373afdbc036230c2086c96f64e9/src/auth-provider.ts
 // Under http://www.apache.org/licenses/LICENSE-2.0
+// Take diff with ca18dea96766c744978307aad73ca9588ee5a948 for applied changes
 
 /**
  * Dummy auth provider implementation.

@@ -65,3 +65,8 @@ When installing, following vulnerabilities were found, and `npm audit fix` did n
 - node-forge: high severity vulnerabilities
 
 To solve this, I used [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions#how-to-use).
+
+### Fake OAuth authorization
+
+Update https://github.com/actions-on-google/smart-home-nodejs/blob/450b3216e0630373afdbc036230c2086c96f64e9/src/auth-provider.ts to fit express.js (3ff5fad64504b47e6fd35ea287e785bb446967de)
+
