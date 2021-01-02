@@ -1,0 +1,27 @@
+{
+  "name": "google-home-relay",
+  "version": "0.1.0",
+  "description": "Smart Home service fulfillment that simply relays requests to another server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mtannaan/google-home-relay.git"
+  },
+  "keywords": [
+    "google",
+    "actions",
+    "smart",
+    "home",
+    "google",
+    "assistant"
+  ],
+  "author": "mtannaan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mtannaan/google-home-relay/issues"
+  },
+  "homepage": "https://github.com/mtannaan/google-home-relay#readme"
+}
