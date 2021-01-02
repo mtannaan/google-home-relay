@@ -62,7 +62,7 @@ When installing, following vulnerabilities were found, and `npm audit fix` did n
 - axios: Critical security vulnerability fixed in v0.21.1
 - node-forge: high severity vulnerabilities
 
-To solve this, I used [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions#how-to-use).
+To solve this, I used [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions#how-to-use). Just run `npm install` (without arguments).
 
 ## Fake OAuth authorization
 

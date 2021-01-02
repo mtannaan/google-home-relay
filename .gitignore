@@ -118,6 +118,9 @@ dist
 # build artifacts
 /build
 
+# JSON Web Tokens for Google API
+/jwt
+
 # Apple Desktop Services Store
 .DS_Store
  

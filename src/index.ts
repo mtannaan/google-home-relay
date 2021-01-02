@@ -3,6 +3,9 @@ import * as util from 'util';
 
 import * as express from 'express';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import {app as authProviderApp} from './auth-provider';
 import {app as smartHomeApp} from './fulfillment';
 

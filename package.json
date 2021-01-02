@@ -13,7 +13,8 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint",
-    "preinstall": "npx npm-force-resolutions"
+    "preinstall": "npx npm-force-resolutions",
+    "jwt-to-env": "ls -f jwt/* | head -1 | xargs node -e \"console.log('TOKEN_CREATOR_JWT='+ require('fs').readFileSync(process.argv[1]).toString('hex'))\" && echo && echo 'Paste string above to .env and heroku config:set!'"
   },
   "repository": {
     "type": "git",
@@ -42,8 +43,9 @@
   },
   "dependencies": {
     "actions-on-google": "^2.13.0",
-    "express": "^4.17.1",
-    "axios": "^0.21.1"
+    "axios": "^0.21.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1"
   },
   "resolutions": {
     "node-forge": "0.10.0",
