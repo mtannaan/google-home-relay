@@ -1,4 +1,10 @@
 # Development Notes (Internal)
+
+- [x] Express.js w/ TypeScript
+- [ ] Add OAuth
+- [ ] Add dummy fulfillment
+- [ ] Add relay
+
 ## Create Project
 ```sh
 $ npm init
@@ -34,4 +40,21 @@ app.get('/ping', (req, res) => { res.send('pong'); });
 console.log(`Listening to port ${PORT}...`);
 app.listen(PORT);
 ```
+
+## Plug in Smart Home App
+
+### Install actions-on-google
+
+https://www.npmjs.com/package/actions-on-google#self-hosted-express-server
+
+```sh
+$ npm install actions-on-google
+```
+
+When installing, following vulnerabilities were found, and `npm audit fix` did not work, saying `3 vulnerabilities require manual review`.
+
+- axios: Critical security vulnerability fixed in v0.21.1
+- node-forge: high severity vulnerabilities
+
+To solve this, I used [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions#how-to-use).
 
