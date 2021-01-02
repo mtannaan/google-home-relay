@@ -117,3 +117,7 @@ dist
 
 # build artifacts
 /build
+
+# Apple Desktop Services Store
+.DS_Store
+ 
