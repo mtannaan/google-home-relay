@@ -49,9 +49,7 @@ console.log(`Listening to port ${PORT}...`);
 app.listen(PORT);
 ```
 
-## Plug in Smart Home App
-
-### Install actions-on-google
+## Install actions-on-google
 
 https://www.npmjs.com/package/actions-on-google#self-hosted-express-server
 
@@ -66,7 +64,38 @@ When installing, following vulnerabilities were found, and `npm audit fix` did n
 
 To solve this, I used [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions#how-to-use).
 
-### Fake OAuth authorization
+## Fake OAuth authorization
 
 Update https://github.com/actions-on-google/smart-home-nodejs/blob/450b3216e0630373afdbc036230c2086c96f64e9/src/auth-provider.ts to fit express.js (3ff5fad64504b47e6fd35ea287e785bb446967de)
+
+## Deploy to Heroku
+
+```sh
+$ heroku create
+```
+
+Add /Procfile:
+
+```
+web: node build/index.js
+```
+
+Deploy with
+
+```sh
+$ git push heroku main
+```
+
+View real-time logs with
+
+```sh
+$ heroku logs --tail
+```
+
+Scale down/up with
+
+```sh
+$ heroku ps:scale web=0
+$ heroku ps:scale web=1
+```
 
