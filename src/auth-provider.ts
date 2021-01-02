@@ -17,7 +17,7 @@ export const app = express();
 app.get('/login', (req, res) => {
   res.send(`<html>
 <body>
-<form action="/login" method="post">
+<form action="/auth/login" method="post">
 <input type="hidden" name="responseurl" value="${req.query.responseurl}" />
 <button type="submit" style="font-size:14pt">Link this service to Google</button>
 </form>
@@ -42,7 +42,9 @@ app.get('/fakeauth', async (req, res) => {
     req.query.state
   );
   console.log(`Set redirect as ${responseurl}`);
-  return res.redirect(`/login?responseurl=${encodeURIComponent(responseurl)}`);
+  return res.redirect(
+    `/auth/login?responseurl=${encodeURIComponent(responseurl)}`
+  );
 });
 
 app.all('/faketoken', async (req, res) => {

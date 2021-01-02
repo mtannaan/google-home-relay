@@ -1,22 +1,28 @@
 # Development Notes (Internal)
 
 - [x] Express.js w/ TypeScript
-- [ ] Add OAuth
+- [x] Deploy to Heroku
+- [x] Add OAuth (toy)
 - [ ] Add dummy fulfillment
 - [ ] Add relay
+- [ ] Add OAuth (secure)
 
 ## Create Project
+
 ```sh
 $ npm init
 ```
 
 ## Use TypeScript
+
 https://github.com/actions-on-google/smart-home-nodejs/blob/master/package.json
+
 ```sh
 $ npm install --save-dev typescript gts
 ```
 
 https://github.com/google/gts
+
 ```sh
 $ npx gts init
 ```
@@ -31,12 +37,14 @@ $ npm install --save-dev @types/express
 index.ts -->
 
 ```typescript
-import * as express from "express";
-import { env } from "process";
+import * as express from 'express';
+import {env} from 'process';
 const PORT = env.PORT || 3000;
 
 const app = express();
-app.get('/ping', (req, res) => { res.send('pong'); });
+app.get('/ping', (req, res) => {
+  res.send('pong');
+});
 console.log(`Listening to port ${PORT}...`);
 app.listen(PORT);
 ```
@@ -57,4 +65,3 @@ When installing, following vulnerabilities were found, and `npm audit fix` did n
 - node-forge: high severity vulnerabilities
 
 To solve this, I used [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions#how-to-use).
-
