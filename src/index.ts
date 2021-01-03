@@ -42,3 +42,6 @@ app.post('/fulfillment', smartHomeApp);
 // Run
 console.log(`Listening to port ${PORT}...`);
 app.listen(PORT);
+
+// Home device connection
+// https://devcenter.heroku.com/articles/node-websockets#option-1-websocket
