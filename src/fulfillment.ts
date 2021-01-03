@@ -11,6 +11,8 @@ const jwt =
 
 export const app = smarthome({jwt});
 
+// https://developers.google.com/assistant/smarthome/develop/process-intents#list-devices
+// https://developers.google.com/assistant/smarthome/reference/intent/sync
 app.onSync(body => {
   // TODO: get user ID from headers
   return {
@@ -18,6 +20,20 @@ app.onSync(body => {
     payload: {
       agentUserId,
       devices,
+    },
+  };
+});
+
+// https://developers.google.com/assistant/smarthome/develop/process-intents#queries-commands
+// https://developers.google.com/assistant/smarthome/reference/intent/query
+app.onQuery(body => {
+  // TODO: get user ID from headers
+  return {
+    requestId: body.requestId,
+    payload: {
+      devices: new Map(
+        devices.map(device => [device.id, {online: true, status: 'SUCCESS'}])
+      ),
     },
   };
 });
