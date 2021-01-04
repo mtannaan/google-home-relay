@@ -1,9 +1,8 @@
-import * as util from 'util';
-
 import * as WebSocket from 'ws';
 import {SmartHomeV1SyncDevices} from 'actions-on-google';
 
 import {requestSync} from './fulfillment';
+import {inspect} from './util';
 
 type DeviceSetId = string;
 
@@ -36,9 +35,7 @@ export class DeviceManager {
       (acc, devset) => acc.concat(devset.deviceDefinitions),
       [] as SmartHomeV1SyncDevices[]
     );
-    console.log(
-      `getDeviceDefinitions return ${util.inspect(ret, false, null, true)}`
-    );
+    console.log(`getDeviceDefinitions return ${inspect(ret)}`);
     return ret;
   }
 

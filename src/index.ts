@@ -1,5 +1,4 @@
 // Standard library
-import * as util from 'util';
 import * as http from 'http';
 import {IncomingMessage} from 'http';
 import {Socket} from 'net';
@@ -14,15 +13,20 @@ dotenv.config();
 import {app as authProviderApp} from './auth-provider';
 import {app as smartHomeApp} from './fulfillment';
 import {handleDeviceMessage, removeOldDevices} from './device-iface';
+import {inspect} from './util';
 
-// Consts
+// ----------------------------------------------------------------------------
+// Consts and globals
+// ----------------------------------------------------------------------------
 const PORT = process.env.PORT || 3000;
 
 // Servers
 const app = express();
 const server = http.createServer(app);
 
-// Middlewares
+// ----------------------------------------------------------------------------
+// Express.js Middlewares
+// ----------------------------------------------------------------------------
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
@@ -36,20 +40,25 @@ if (process.env.DEBUG) {
       query: req.query,
       body: req.body,
     };
-    console.log(util.inspect(logObj, false, null, true));
+    console.log(inspect(logObj));
     next();
   });
 }
 
-// Routes
+// ----------------------------------------------------------------------------
+// Express.js routes
+// ----------------------------------------------------------------------------
 app.get('/ping', (req, res) => {
   res.send('pong');
 });
 app.use('/auth', authProviderApp);
 app.post('/fulfillment', smartHomeApp);
 
+// ----------------------------------------------------------------------------
 // WebSocket connection from home devices
+//
 // https://devcenter.heroku.com/articles/node-websockets#option-1-websocket
+// ----------------------------------------------------------------------------
 const wss = new WebSocket.Server({path: '/device-manager', noServer: true});
 
 function authorize(
@@ -87,5 +96,7 @@ wss.on('connection', (ws, request) => {
 const interval = setInterval(() => removeOldDevices(wss), 5 * 60 * 1000);
 wss.on('close', () => clearInterval(interval));
 
-// Run
+// ----------------------------------------------------------------------------
+// Run Server
+// ----------------------------------------------------------------------------
 server.listen(PORT, () => console.log(`Listening to port ${PORT}...`));

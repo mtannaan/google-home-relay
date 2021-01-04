@@ -1,5 +1,3 @@
-import * as util from 'util';
-
 import {
   smarthome,
   SmartHomeV1ExecuteRequestExecution,
@@ -7,10 +5,9 @@ import {
   SmartHomeV1QueryRequestDevices,
 } from 'actions-on-google';
 
-// import {devices} from './devices';
-
 import {DeviceManager} from './device-manager';
 import {sendExecuteMessage} from './device-iface';
+import {inspect} from './util';
 
 const deviceManager = DeviceManager.instance;
 const agentUserId = 'user9999';
@@ -29,12 +26,7 @@ app.onSync(body => {
   console.log('SYNC received');
   const deviceDefinitions = deviceManager.getDeviceDefinitions();
   console.log(
-    `will return devices: ${util.inspect(
-      deviceDefinitions.map(d => d.id),
-      false,
-      null,
-      true
-    )}`
+    `will return devices: ${inspect(deviceDefinitions.map(d => d.id))}`
   );
   return {
     requestId: body.requestId,
