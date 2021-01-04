@@ -1,3 +1,7 @@
+// dotenv.config needs to be called first
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 // Standard library
 import * as http from 'http';
 import {IncomingMessage} from 'http';
@@ -6,8 +10,6 @@ import {Socket} from 'net';
 // Third party modules
 import * as express from 'express';
 import * as WebSocket from 'ws';
-import * as dotenv from 'dotenv';
-dotenv.config();
 
 // Project modules
 import {app as authProviderApp} from './auth-provider';
@@ -16,9 +18,17 @@ import {handleDeviceMessage, removeOldDevices} from './device-iface';
 import {inspect} from './util';
 
 // ----------------------------------------------------------------------------
+// Types
+// ----------------------------------------------------------------------------
+interface WebSocketWithIsAlive extends WebSocket {
+  isAlive: boolean;
+}
+
+// ----------------------------------------------------------------------------
 // Consts and globals
 // ----------------------------------------------------------------------------
 const PORT = process.env.PORT || 3000;
+const wsPingInterval = 50 * 1000;
 
 // Servers
 const app = express();
@@ -87,12 +97,34 @@ server.on('upgrade', (request, socket, head) => {
   });
 });
 
+// https://www.npmjs.com/package/ws#how-to-detect-and-close-broken-connections
+const checkConnectivity = (conn: WebSocketWithIsAlive) => {
+  if (!conn.isAlive) {
+    conn.terminate();
+    return;
+  }
+  conn.isAlive = false;
+  conn.ping();
+};
+
 wss.on('connection', (ws, request) => {
+  const wsWithIsAlive = ws as WebSocketWithIsAlive;
+  wsWithIsAlive.isAlive = true;
   console.log(`new connection accepted from ${request.socket.remoteAddress}`);
-  ws.on('message', data => handleDeviceMessage(ws, data));
+
+  const intervalTimers = [];
+  wsWithIsAlive
+    .on('open', () => {
+      intervalTimers.push(
+        setInterval(checkConnectivity, wsPingInterval, wsWithIsAlive)
+      );
+    })
+    .on('pong', () => {
+      wsWithIsAlive.isAlive = true;
+    })
+    .on('message', data => handleDeviceMessage(ws, data));
 });
 
-// https://www.npmjs.com/package/ws#how-to-detect-and-close-broken-connections
 const interval = setInterval(() => removeOldDevices(wss), 5 * 60 * 1000);
 wss.on('close', () => clearInterval(interval));
 
