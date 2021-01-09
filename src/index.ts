@@ -9,26 +9,19 @@ import {Socket} from 'net';
 
 // Third party modules
 import * as express from 'express';
-import * as WebSocket from 'ws';
 
-// Project modules
-import {app as authProviderApp} from './auth-provider';
-import {app as smartHomeApp} from './fulfillment';
-import {handleDeviceMessage, removeOldDevices} from './device-iface';
-import {inspect} from './util';
+// Middlewares
+import {dumpRequestMW} from './middlewares/dump-request';
 
-// ----------------------------------------------------------------------------
-// Types
-// ----------------------------------------------------------------------------
-interface WebSocketWithIsAlive extends WebSocket {
-  isAlive: boolean;
-}
+// Routes & Sub-Apps
+import {app as authProviderApp} from './routes/auth-provider';
+import {app as smartHomeApp} from './routes/smart-home';
+import {wss} from './routes/websocket';
 
 // ----------------------------------------------------------------------------
 // Consts and globals
 // ----------------------------------------------------------------------------
 const PORT = process.env.PORT || 3000;
-const wsPingInterval = 50 * 1000;
 
 // Servers
 const app = express();
@@ -37,22 +30,10 @@ const server = http.createServer(app);
 // ----------------------------------------------------------------------------
 // Express.js Middlewares
 // ----------------------------------------------------------------------------
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: false}));
 app.use(express.json());
-
 if (process.env.DEBUG) {
-  app.use((req, _res, next) => {
-    const logObj = {
-      headers: req.headers,
-      url: req.url,
-      method: req.method,
-      params: req.params,
-      query: req.query,
-      body: req.body,
-    };
-    console.log(inspect(logObj));
-    next();
-  });
+  app.use(dumpRequestMW);
 }
 
 // ----------------------------------------------------------------------------
@@ -65,12 +46,8 @@ app.use('/auth', authProviderApp);
 app.post('/fulfillment', smartHomeApp);
 
 // ----------------------------------------------------------------------------
-// WebSocket connection from home devices
-//
-// https://devcenter.heroku.com/articles/node-websockets#option-1-websocket
+// Accept WebSocket Connection
 // ----------------------------------------------------------------------------
-const wss = new WebSocket.Server({path: '/device-manager', noServer: true});
-
 function authorize(
   request: IncomingMessage,
   socket: Socket,
@@ -96,37 +73,6 @@ server.on('upgrade', (request, socket, head) => {
     });
   });
 });
-
-// https://www.npmjs.com/package/ws#how-to-detect-and-close-broken-connections
-const checkConnectivity = (conn: WebSocketWithIsAlive) => {
-  if (!conn.isAlive) {
-    conn.terminate();
-    return;
-  }
-  conn.isAlive = false;
-  conn.ping();
-};
-
-wss.on('connection', (ws, request) => {
-  const wsWithIsAlive = ws as WebSocketWithIsAlive;
-  wsWithIsAlive.isAlive = true;
-  console.log(`new connection accepted from ${request.socket.remoteAddress}`);
-
-  const intervalTimers = [];
-  wsWithIsAlive
-    .on('open', () => {
-      intervalTimers.push(
-        setInterval(checkConnectivity, wsPingInterval, wsWithIsAlive)
-      );
-    })
-    .on('pong', () => {
-      wsWithIsAlive.isAlive = true;
-    })
-    .on('message', data => handleDeviceMessage(ws, data));
-});
-
-const interval = setInterval(() => removeOldDevices(wss), 5 * 60 * 1000);
-wss.on('close', () => clearInterval(interval));
 
 // ----------------------------------------------------------------------------
 // Run Server

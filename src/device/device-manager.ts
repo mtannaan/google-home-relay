@@ -1,8 +1,8 @@
 import * as WebSocket from 'ws';
 import {SmartHomeV1SyncDevices} from 'actions-on-google';
 
-import {requestSync} from './fulfillment';
-import {inspect} from './util';
+import {requestSync} from '../routes/smart-home';
+import {inspect} from '../util';
 
 type DeviceSetId = string;
 

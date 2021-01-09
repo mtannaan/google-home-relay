@@ -5,9 +5,9 @@ import {
   SmartHomeV1QueryRequestDevices,
 } from 'actions-on-google';
 
-import {DeviceManager} from './device-manager';
-import {sendExecuteMessage} from './device-iface';
-import {inspect} from './util';
+import {DeviceManager} from '../device/device-manager';
+import {sendExecuteMessage} from '../device/device-iface';
+import {inspect} from '../util';
 
 const deviceManager = DeviceManager.instance;
 const agentUserId = 'user9999';
