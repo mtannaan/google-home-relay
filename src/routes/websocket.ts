@@ -6,6 +6,7 @@ import {handleDeviceMessage, removeOldDevices} from '../device/device-iface';
 // Consts and globals
 // ----------------------------------------------------------------------------
 const wsPingInterval = 50 * 1000;
+const deviceAutoRemoveInterval = 5 * 60 * 1000;
 
 // ----------------------------------------------------------------------------
 // Types
@@ -19,7 +20,6 @@ interface WebSocketWithIsAlive extends WebSocket {
 //
 // https://devcenter.heroku.com/articles/node-websockets#option-1-websocket
 // ----------------------------------------------------------------------------
-
 export const wss = new WebSocket.Server({
   path: '/device-manager',
   noServer: true,
@@ -39,15 +39,23 @@ wss.on('connection', (ws: WebSocketWithIsAlive, request) => {
   ws.isAlive = true;
   console.log(`new connection accepted from ${request.socket.remoteAddress}`);
 
-  const intervalTimers = [];
+  const intervalTimers: NodeJS.Timeout[] = [];
   ws.on('open', () => {
     intervalTimers.push(setInterval(checkConnectivity, wsPingInterval, ws));
   })
     .on('pong', () => {
       ws.isAlive = true;
     })
-    .on('message', data => handleDeviceMessage(ws, data));
+    .on('message', data => handleDeviceMessage(ws, data))
+    .on('close', () => {
+      while (Array.isArray(intervalTimers) && intervalTimers.length > 0) {
+        clearInterval(intervalTimers.pop() as NodeJS.Timeout);
+      }
+    });
 });
 
-const interval = setInterval(() => removeOldDevices(wss), 5 * 60 * 1000);
-wss.on('close', () => clearInterval(interval));
+const autoRemoveTimer = setInterval(
+  () => removeOldDevices(wss),
+  deviceAutoRemoveInterval
+);
+wss.on('close', () => clearInterval(autoRemoveTimer));
