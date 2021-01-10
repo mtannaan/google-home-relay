@@ -1,6 +1,7 @@
 import * as WebSocket from 'ws';
 
-import {handleDeviceMessage, removeOldDevices} from '../device/device-iface';
+// import {handleDeviceMessage, removeOldDevices} from '../device/device-iface';
+import {deviceIface} from '../services';
 
 // ----------------------------------------------------------------------------
 // Consts and globals
@@ -46,7 +47,7 @@ wss.on('connection', (ws: WebSocketWithIsAlive, request) => {
     .on('pong', () => {
       ws.isAlive = true;
     })
-    .on('message', data => handleDeviceMessage(ws, data))
+    .on('message', data => deviceIface.handleDeviceMessage(ws, data))
     .on('close', () => {
       while (Array.isArray(intervalTimers) && intervalTimers.length > 0) {
         clearInterval(intervalTimers.pop() as NodeJS.Timeout);
@@ -55,7 +56,7 @@ wss.on('connection', (ws: WebSocketWithIsAlive, request) => {
 });
 
 const autoRemoveTimer = setInterval(
-  () => removeOldDevices(wss),
+  () => deviceIface.removeOldDevices(wss),
   deviceAutoRemoveInterval
 );
 wss.on('close', () => clearInterval(autoRemoveTimer));

@@ -4,19 +4,24 @@ dotenv.config();
 
 // Standard library
 import * as http from 'http';
-import {IncomingMessage} from 'http';
-import {Socket} from 'net';
+import * as net from 'net';
 
 // Third party modules
 import * as express from 'express';
+import * as expressSession from 'express-session';
+// import * as cookieParser from 'cookie-parser';
+import * as passport from 'passport';
+import * as errorHandler from 'errorhandler';
 
 // Middlewares
 import {dumpRequestMW} from './middlewares/dump-request';
+import {dumpResponseMW} from './middlewares/dump-response';
 
 // Routes & Sub-Apps
-import {app as authProviderApp} from './routes/auth-provider';
-import {app as smartHomeApp} from './routes/smart-home';
-import {wss} from './routes/websocket';
+// import {app as authProviderApp} from './routes/auth-provider';
+// import {app as smartHomeApp} from './routes/smart-home';
+// import {wss} from './routes/websocket';
+import {apps} from './services';
 
 // ----------------------------------------------------------------------------
 // Consts and globals
@@ -28,13 +33,37 @@ const app = express();
 const server = http.createServer(app);
 
 // ----------------------------------------------------------------------------
+// Express Settings
+// ----------------------------------------------------------------------------
+// app.engine('ejs', ejs.__express);
+app.set('view engine', 'ejs');
+app.set('views', './views');
+
+// ----------------------------------------------------------------------------
 // Express.js Middlewares
 // ----------------------------------------------------------------------------
+if (process.env.DEBUG) {
+  app.use(dumpResponseMW);
+}
+// app.use(cookieParser());
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+app.use(
+  expressSession({
+    secret: 'FIXME: replace this with env var', // FIXME: replace this
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 if (process.env.DEBUG) {
   app.use(dumpRequestMW);
 }
+app.use(errorHandler());
+
+// Passport configuration
+import './auth';
 
 // ----------------------------------------------------------------------------
 // Express.js routes
@@ -42,17 +71,32 @@ if (process.env.DEBUG) {
 app.get('/ping', (req, res) => {
   res.send('pong');
 });
-app.use('/auth', authProviderApp);
-app.post('/fulfillment', smartHomeApp);
+// app.use('/auth', authProviderApp);
+app.post('/fulfillment', [
+  passport.authenticate('bearer', {session: false}),
+  apps.smartHomeApp,
+]);
+
+const site = require('./routes/site');
+app.get('/', site.index);
+app.get('/login', site.loginForm);
+app.post('/login', site.login);
+app.get('/logout', site.logout);
+app.get('/account', site.account);
+
+const oauth2 = require('./routes/oauth2');
+app.get('/dialog/authorize', oauth2.authorization);
+app.post('/dialog/authorize/decision', oauth2.decision);
+app.post('/oauth/token', oauth2.token);
 
 // ----------------------------------------------------------------------------
 // Accept WebSocket Connection
 // ----------------------------------------------------------------------------
 function authorize(
-  request: IncomingMessage,
-  socket: Socket,
+  request: http.IncomingMessage,
+  socket: net.Socket,
   head: Buffer,
-  callback: (err: null, client: Socket) => void
+  callback: (err: null, client: net.Socket) => void
 ) {
   const err = null; // TODO: authorization here
   callback(err, socket);
@@ -68,8 +112,8 @@ server.on('upgrade', (request, socket, head) => {
       return;
     }
 
-    wss.handleUpgrade(request, socket, head, (ws, request) => {
-      wss.emit('connection', ws, request, client);
+    apps.wss.handleUpgrade(request, socket, head, (ws, request) => {
+      apps.wss.emit('connection', ws, request, client);
     });
   });
 });

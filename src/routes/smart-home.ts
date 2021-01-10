@@ -5,11 +5,12 @@ import {
   SmartHomeV1QueryRequestDevices,
 } from 'actions-on-google';
 
-import {DeviceManager} from '../device/device-manager';
-import {sendExecuteMessage} from '../device/device-iface';
+import {DeviceManager} from '../services';
+// import {DeviceManager} from '../device/device-manager';
+import {deviceIface} from '../services';
+// import {sendExecuteMessage} from '../device/device-iface';
 import {inspect} from '../util';
 
-const deviceManager = DeviceManager.instance;
 const agentUserId = 'user9999';
 
 const jwt =
@@ -24,7 +25,7 @@ export const app = smarthome({jwt});
 app.onSync(body => {
   // TODO: get user ID from headers
   console.log('SYNC received');
-  const deviceDefinitions = deviceManager.getDeviceDefinitions();
+  const deviceDefinitions = DeviceManager.instance.getDeviceDefinitions();
   console.log(
     `will return devices: ${inspect(deviceDefinitions.map(d => d.id))}`
   );
@@ -45,7 +46,7 @@ app.onQuery(body => {
     requestId: body.requestId,
     payload: {
       devices: new Map(
-        deviceManager
+        DeviceManager.instance
           .getDeviceDefinitions()
           .map(def => [def.id, {online: true, status: 'SUCCESS'}])
       ),
@@ -78,13 +79,13 @@ function handleExecutePerDevice(
   executions: SmartHomeV1ExecuteRequestExecution[]
 ): SmartHomeV1ExecuteResponseCommands {
   console.log(`handleExecutePerDevice: ${device.id}`);
-  const conn = deviceManager.getConnectionForDeviceId(device.id);
+  const conn = DeviceManager.instance.getConnectionForDeviceId(device.id);
 
   if (!conn) {
     return {ids: [device.id], status: 'OFFLINE'};
   }
 
-  sendExecuteMessage(conn, device, executions);
+  deviceIface.sendExecuteMessage(conn, device, executions);
   return {ids: [device.id], status: 'SUCCESS'};
 }
 

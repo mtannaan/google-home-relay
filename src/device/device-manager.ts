@@ -1,7 +1,8 @@
 import * as WebSocket from 'ws';
 import {SmartHomeV1SyncDevices} from 'actions-on-google';
 
-import {requestSync} from '../routes/smart-home';
+import {smartHomeIface} from '../services';
+// import {requestSync} from '../routes/smart-home';
 import {inspect} from '../util';
 
 type DeviceSetId = string;
@@ -60,7 +61,7 @@ export class DeviceManager {
       lastRegistration: new Date().getTime(),
     });
     this.connectionToDeviceSet.set(connection, deviceSetId);
-    requestSync();
+    smartHomeIface.requestSync();
   }
 
   remove(connection: WebSocket) {

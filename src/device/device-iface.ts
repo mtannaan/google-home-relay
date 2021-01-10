@@ -5,7 +5,8 @@ import {
   SmartHomeV1ExecuteRequestExecution,
 } from 'actions-on-google';
 
-import {DeviceManager} from './device-manager';
+// import {DeviceManager} from './device-manager';
+import {DeviceManager} from '../services';
 
 const MilliSecInHour = 60 * 60 * 1000;
 const RegistrationInterval = 12 * MilliSecInHour;
