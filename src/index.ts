@@ -21,9 +21,8 @@ const pgSession = connectPgSimple(expressSession);
 import {getSessionSecret} from './util';
 
 // Routes & Sub-Apps
-// import {app as authProviderApp} from './routes/auth-provider';
-// import {app as smartHomeApp} from './routes/smart-home';
-// import {wss} from './routes/websocket';
+import * as siteRoutes from './routes/site';
+import * as oauth2Routes from './routes/oauth2';
 import {apps} from './services';
 
 // ----------------------------------------------------------------------------
@@ -48,6 +47,7 @@ app.set('x-powered-by', false);
 // ----------------------------------------------------------------------------
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+log4js.getLogger().debug(`using DATABASE_URL ${process.env.DATABASE_URL}`);
 app.use(
   expressSession({
     store: new pgSession({
@@ -61,7 +61,7 @@ app.use(
     secret: getSessionSecret(),
     resave: false,
     saveUninitialized: false,
-    // FIXME: add maxage
+    cookie: {maxAge: 60 * 60 * 1000 /* 1h */},
   })
 );
 app.use(passport.initialize());
@@ -84,17 +84,15 @@ app.post('/fulfillment', [
   apps.smartHomeApp,
 ]);
 
-const site = require('./routes/site');
-app.get('/', site.index);
-app.get('/login', site.loginForm);
-app.post('/login', site.login);
-app.get('/logout', site.logout);
-app.get('/account', site.account);
+app.get('/', siteRoutes.index);
+app.get('/login', siteRoutes.loginForm);
+app.post('/login', siteRoutes.login);
+app.get('/logout', siteRoutes.logout);
+app.get('/account', siteRoutes.account);
 
-const oauth2 = require('./routes/oauth2');
-app.get('/dialog/authorize', oauth2.authorization);
-app.post('/dialog/authorize/decision', oauth2.decision);
-app.post('/oauth/token', oauth2.token);
+app.get('/dialog/authorize', oauth2Routes.authorization);
+app.post('/dialog/authorize/decision', oauth2Routes.decision);
+app.post('/oauth/token', oauth2Routes.token);
 
 // ----------------------------------------------------------------------------
 // Accept WebSocket Connection
