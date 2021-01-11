@@ -53,7 +53,9 @@ app.use(
     store: new pgSession({
       conObject: {
         connectionString: process.env.DATABASE_URL,
-        ssl: true,
+        // https://devcenter.heroku.com/articles/heroku-postgresql#connecting-in-node-js
+        // Heroku seems to use self-signed cert
+        ssl: {rejectUnauthorized: false},
       },
     }),
     secret: getSessionSecret(),
