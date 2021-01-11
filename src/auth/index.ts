@@ -1,14 +1,18 @@
-'use strict';
+import * as bcrypt from 'bcryptjs';
+import * as passport from 'passport';
+import {Strategy as LocalStrategy} from 'passport-local';
+import {BasicStrategy} from 'passport-http';
+import {Strategy as ClientPasswordStrategy} from 'passport-oauth2-client-password';
+import {Strategy as BearerStrategy} from 'passport-http-bearer';
+// const bcrypt = require('bcryptjs');
+// const passport = require('passport');
+// const LocalStrategy = require('passport-local').Strategy;
+// const BasicStrategy = require('passport-http').BasicStrategy;
+// const ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy;
+// const BearerStrategy = require('passport-http-bearer').Strategy;
 
-const bcrypt = require('bcryptjs');
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const BasicStrategy = require('passport-http').BasicStrategy;
-const ClientPasswordStrategy = require('passport-oauth2-client-password')
-  .Strategy;
-const BearerStrategy = require('passport-http-bearer').Strategy;
-
-const db = require('../db');
+import * as db from '../db';
+// const db = require('../db');
 
 /**
  * LocalStrategy
@@ -31,9 +35,9 @@ passport.use(
   })
 );
 
-passport.serializeUser((user, done) => done(null, user.id));
+passport.serializeUser((user, done) => done(null, (user as db.users.User).id));
 
-passport.deserializeUser((id, done) => {
+passport.deserializeUser((id: number, done) => {
   db.users.findById(id, (error, user) => done(error, user));
 });
 
@@ -48,7 +52,7 @@ passport.deserializeUser((id, done) => {
  * to the `Authorization` header). While this approach is not recommended by
  * the specification, in practice it is quite common.
  */
-function verifyClient(clientId, clientSecret, done) {
+function verifyClient(clientId: string, clientSecret: string, done) {
   db.clients.findByClientId(clientId, (error, client) => {
     if (error) return done(error);
     if (!client) return done(null, false);

@@ -19,6 +19,7 @@ const pgSession = connectPgSimple(expressSession);
 
 // Project Modules
 import {getSessionSecret} from './util';
+import {sequelize} from './db';
 
 // Routes & Sub-Apps
 import * as siteRoutes from './routes/site';
@@ -127,6 +128,10 @@ server.on('upgrade', (request, socket, head) => {
 // ----------------------------------------------------------------------------
 // Run Server
 // ----------------------------------------------------------------------------
-server.listen(PORT, () =>
-  log4js.getLogger('http').info(`Listening to port ${PORT}...`)
-);
+sequelize
+  .sync()
+  .then(() =>
+    server.listen(PORT, () =>
+      log4js.getLogger('http').info(`Listening to port ${PORT}...`)
+    )
+  );

@@ -1,15 +1,9 @@
-import {DataTypes, Sequelize} from 'sequelize';
+import {Sequelize, Model, DataTypes} from 'sequelize';
 import * as log4js from 'log4js';
 
 import {inspect} from '../util';
 
 const logger = log4js.getLogger('db');
-
-const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
-  ssl: true,
-  dialectOptions: {ssl: {rejectUnauthorized: false}},
-  logging: (sql, _timing) => logger.debug(sql),
-});
 
 /**
  * user model.
@@ -21,47 +15,125 @@ const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
  *  values ('yourusername', '%YOUR_PASSWORD_HASH%', 'readable user name', now(), now());
  * ```
  */
-const User = sequelize.define(
-  'user',
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    username: {
-      type: DataTypes.STRING,
-      unique: true,
-    },
-    /**
-     * password hashed by bcrypt.hashSync
-     */
-    password: DataTypes.STRING,
-    name: DataTypes.STRING,
-  },
-  {
-    freezeTableName: true, // Model tableName will be the same as the model name
-  }
-);
+export class User extends Model {
+  id!: number;
+  username!: string;
+  password!: string;
+  name!: string;
+  /*
+  static initModel(sequelize: Sequelize) {
+    User.init(
+      {
+        id: {
+          type: DataTypes.INTEGER,
+          autoIncrement: true,
+          primaryKey: true,
+        },
+        username: {
+          type: DataTypes.STRING,
+          unique: true,
+        },
+        /**
+         * password hashed by bcrypt.hashSync
 
-sequelize.sync({alter: true});
+        password: DataTypes.STRING,
+        name: DataTypes.STRING,
+      },
+      {
+        sequelize,
+      }
+    );
+    return {
+      findById: function (
+        id: number,
+        done: (err: Error | null, user?: User) => void
+      ) {
+        User.findByPk(id)
+          .then(user => {
+            if (user === null) {
+              throw new Error('User ID not found');
+            }
+            logger.debug('user id found', inspect(user?.get()));
+            return done(null, user);
+          })
+          .catch(err => {
+            logger.error('error:', inspect(err));
+            return done(err);
+          });
+      },
+      findByUsername: function (
+        username: string,
+        done: (err: Error | null, user?: User) => void
+      ) {
+        logger.debug('findByUsername called with', username);
+        User.findOne({where: {username}})
+          .then(user => {
+            if (user === null) {
+              throw new Error('username not found');
+            }
+            logger.debug('username found', inspect(user?.get()));
+            return done(null, user);
+          })
+          .catch(err => {
+            logger.error('error:', inspect(err));
+            return done(err);
+          });
+      },
+    };
+  }*/
+}
 
-module.exports.findById = (id: string, done: Function) => {
+export function init(sequelize: Sequelize) {
+  User.init(
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      username: {
+        type: DataTypes.STRING,
+        unique: true,
+      },
+      /**
+       * password hashed by bcrypt.hashSync
+       */
+      password: DataTypes.STRING,
+      name: DataTypes.STRING,
+    },
+    {
+      sequelize,
+    }
+  );
+}
+
+export function findById(
+  id: number,
+  done: (err: Error | null, user?: User) => void
+) {
   User.findByPk(id)
     .then(user => {
+      if (user === null) {
+        throw new Error('User ID not found');
+      }
       logger.debug('user id found', inspect(user?.get()));
       return done(null, user);
     })
     .catch(err => {
       logger.error('error:', inspect(err));
-      return done(new Error('User Not Found'));
+      return done(err);
     });
-};
-
-module.exports.findByUsername = (username: string, done: Function) => {
+}
+export function findByUsername(
+  username: string,
+  done: (err: Error | null, user?: User) => void
+) {
   logger.debug('findByUsername called with', username);
   User.findOne({where: {username}})
     .then(user => {
+      if (user === null) {
+        throw new Error('username not found');
+      }
       logger.debug('username found', inspect(user?.get()));
       return done(null, user);
     })
@@ -69,4 +141,4 @@ module.exports.findByUsername = (username: string, done: Function) => {
       logger.error('error:', inspect(err));
       return done(err);
     });
-};
+}
