@@ -47,7 +47,7 @@ app.set('x-powered-by', false);
 // ----------------------------------------------------------------------------
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
-log4js.getLogger().debug(`using DATABASE_URL ${process.env.DATABASE_URL}`);
+console.log(`using DATABASE_URL ${process.env.DATABASE_URL}`);
 app.use(
   expressSession({
     store: new pgSession({
@@ -128,5 +128,5 @@ server.on('upgrade', (request, socket, head) => {
 // Run Server
 // ----------------------------------------------------------------------------
 server.listen(PORT, () =>
-  log4js.getLogger().info(`Listening to port ${PORT}...`)
+  log4js.getLogger('http').info(`Listening to port ${PORT}...`)
 );
