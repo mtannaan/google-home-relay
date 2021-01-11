@@ -10,6 +10,7 @@ const categories = [
   'device-iface',
   'device-mgr',
   'smart-home',
+  'sequelize',
 ];
 const defaultCategoryConfig = {appenders: ['default'], level: 'trace'};
 const config = {

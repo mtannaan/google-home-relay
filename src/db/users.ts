@@ -1,8 +1,12 @@
 import * as sq from 'sequelize';
+import * as log4js from 'log4js';
+
+const logger = log4js.getLogger('sequelize');
 
 const sqinstance = new sq.Sequelize(process.env.DATABASE_URL as string, {
   ssl: true,
   dialectOptions: {ssl: {rejectUnauthorized: false}},
+  logging: (sql, _timing) => logger.debug(sql),
 });
 
 const _User = sqinstance.define(
