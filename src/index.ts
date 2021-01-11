@@ -15,6 +15,7 @@ import * as expressSession from 'express-session';
 import * as passport from 'passport';
 import * as errorHandler from 'errorhandler';
 import * as connectPgSimple from 'connect-pg-simple';
+const pgSession = connectPgSimple(expressSession);
 
 // Project Modules
 import {getSessionSecret} from './util';
@@ -49,7 +50,12 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 app.use(
   expressSession({
-    store: new (connectPgSimple(expressSession))(),
+    store: new pgSession({
+      conObject: {
+        connectionString: process.env.DATABASE_URL,
+        ssl: true,
+      },
+    }),
     secret: getSessionSecret(),
     resave: false,
     saveUninitialized: false,
