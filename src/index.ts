@@ -14,6 +14,7 @@ import * as express from 'express';
 import * as expressSession from 'express-session';
 import * as passport from 'passport';
 import * as errorHandler from 'errorhandler';
+import * as connectPgSimple from 'connect-pg-simple';
 
 // Project Modules
 import {getSessionSecret} from './util';
@@ -48,9 +49,11 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 app.use(
   expressSession({
+    store: new (connectPgSimple(expressSession))(),
     secret: getSessionSecret(),
     resave: false,
     saveUninitialized: false,
+    // FIXME: add maxage
   })
 );
 app.use(passport.initialize());
