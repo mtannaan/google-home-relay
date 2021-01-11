@@ -39,6 +39,7 @@ const server = http.createServer(app);
 // app.engine('ejs', ejs.__express);
 app.set('view engine', 'ejs');
 app.set('views', './views');
+app.set('x-powered-by', false);
 
 // ----------------------------------------------------------------------------
 // Express.js Middlewares
