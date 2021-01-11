@@ -123,4 +123,7 @@ dist
 
 # Apple Desktop Services Store
 .DS_Store
- 
+
+# Postgres Data Store for local testing
+/local-postgres/data
+/local-postgres/keys

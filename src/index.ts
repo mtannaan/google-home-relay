@@ -47,7 +47,7 @@ app.set('x-powered-by', false);
 // ----------------------------------------------------------------------------
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
-console.log(`using DATABASE_URL ${process.env.DATABASE_URL}`);
+log4js.getLogger().debug(`using DATABASE_URL ${process.env.DATABASE_URL}`);
 app.use(
   expressSession({
     store: new pgSession({
