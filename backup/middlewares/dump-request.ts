@@ -1,6 +1,6 @@
 import {RequestHandler} from 'express';
 
-import {inspect} from '../util';
+import {inspect} from '../../src/util';
 
 export const dumpRequestMW: RequestHandler = (req, _res, next) => {
   const logObj = {

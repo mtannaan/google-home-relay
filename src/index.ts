@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 // Initialize log4js
-import './log';
+import {log4js, customConnectLogger} from './log';
 
 // Standard library
 import * as http from 'http';
@@ -14,14 +14,9 @@ import * as express from 'express';
 import * as expressSession from 'express-session';
 import * as passport from 'passport';
 import * as errorHandler from 'errorhandler';
-import * as log4js from 'log4js';
 
 // Project Modules
 import {getSessionSecret} from './util';
-
-// Middlewares
-import {dumpRequestMW} from './middlewares/dump-request';
-import {dumpResponseMW} from './middlewares/dump-response';
 
 // Routes & Sub-Apps
 // import {app as authProviderApp} from './routes/auth-provider';
@@ -48,9 +43,6 @@ app.set('views', './views');
 // ----------------------------------------------------------------------------
 // Express.js Middlewares
 // ----------------------------------------------------------------------------
-//if (process.env.DEBUG) {
-//  app.use(dumpResponseMW);
-//}
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 app.use(
@@ -62,10 +54,7 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-//if (process.env.DEBUG) {
-//  app.use(dumpRequestMW);
-//}
-app.use(log4js.connectLogger(log4js.getLogger('http'), {level: 'auto'}));
+app.use(customConnectLogger);
 app.use(errorHandler());
 
 // Passport configuration
