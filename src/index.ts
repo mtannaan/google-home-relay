@@ -9,7 +9,6 @@ import * as net from 'net';
 // Third party modules
 import * as express from 'express';
 import * as expressSession from 'express-session';
-// import * as cookieParser from 'cookie-parser';
 import * as passport from 'passport';
 import * as errorHandler from 'errorhandler';
 
@@ -45,7 +44,6 @@ app.set('views', './views');
 if (process.env.DEBUG) {
   app.use(dumpResponseMW);
 }
-// app.use(cookieParser());
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 app.use(
