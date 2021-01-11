@@ -48,9 +48,9 @@ app.set('views', './views');
 // ----------------------------------------------------------------------------
 // Express.js Middlewares
 // ----------------------------------------------------------------------------
-if (process.env.DEBUG) {
-  app.use(dumpResponseMW);
-}
+//if (process.env.DEBUG) {
+//  app.use(dumpResponseMW);
+//}
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 app.use(
@@ -62,9 +62,10 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-if (process.env.DEBUG) {
-  app.use(dumpRequestMW);
-}
+//if (process.env.DEBUG) {
+//  app.use(dumpRequestMW);
+//}
+app.use(log4js.connectLogger(log4js.getLogger('http'), {level: 'auto'}));
 app.use(errorHandler());
 
 // Passport configuration

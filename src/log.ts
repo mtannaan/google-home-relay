@@ -2,6 +2,7 @@ import * as log4js from 'log4js';
 
 const categories = [
   'default',
+  'http',
   'ws',
   'device-iface',
   'device-mgr',

@@ -49,13 +49,11 @@ wss.on('connection', (ws: WebSocketWithIsAlive, request) => {
   );
 
   const intervalTimers: NodeJS.Timeout[] = [];
-  ws.on('open', () => {
-    intervalTimers.push(setInterval(checkConnectivity, wsPingInterval, ws));
+  intervalTimers.push(setInterval(checkConnectivity, wsPingInterval, ws));
+  ws.on('pong', () => {
+    logger.debug(`pong received from connection ${ws.id}`);
+    ws.isAlive = true;
   })
-    .on('pong', () => {
-      logger.debug(`pong received from connection ${ws.id}`);
-      ws.isAlive = true;
-    })
     .on('message', data => deviceIface.handleDeviceMessage(ws, data))
     .on('close', () => {
       logger.debug(`Closing connection ${ws.id}`);
