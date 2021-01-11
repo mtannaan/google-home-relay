@@ -46,6 +46,8 @@
     "@types/node": "^14.11.2",
     "@types/oauth2orize": "^1.8.8",
     "@types/passport": "^1.0.5",
+    "@types/pg": "^7.14.7",
+    "@types/sequelize": "^4.28.9",
     "@types/ws": "^7.4.0",
     "gts": "^3.0.3",
     "npm-force-resolutions": "0.0.3",
@@ -70,6 +72,9 @@
     "passport-http-bearer": "^1.0.1",
     "passport-local": "^1.0.0",
     "passport-oauth2-client-password": "^0.1.2",
+    "pg": "^8.5.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^6.3.5",
     "utf-8-validate": "^5.0.3",
     "ws": "^7.4.2"
   },
