@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/mtannaan/google-home-relay#readme",
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/connect-ensure-login": "^0.1.5",
     "@types/connect-pg-simple": "^4.2.2",
     "@types/ejs": "^3.0.5",
@@ -47,6 +48,10 @@
     "@types/node": "^14.11.2",
     "@types/oauth2orize": "^1.8.8",
     "@types/passport": "^1.0.5",
+    "@types/passport-http": "^0.3.8",
+    "@types/passport-http-bearer": "^1.0.36",
+    "@types/passport-local": "^1.0.33",
+    "@types/passport-oauth2-client-password": "^0.1.2",
     "@types/pg": "^7.14.7",
     "@types/sequelize": "^4.28.9",
     "@types/ws": "^7.4.0",
@@ -58,6 +63,7 @@
   "dependencies": {
     "actions-on-google": "^2.13.0",
     "axios": "^0.21.1",
+    "bcryptjs": "^2.4.3",
     "bufferutil": "^4.0.3",
     "connect-ensure-login": "^0.1.1",
     "connect-pg-simple": "^6.2.1",
