@@ -1,3 +1,4 @@
+import * as log4js from 'log4js';
 import {
   smarthome,
   SmartHomeV1ExecuteRequestExecution,
@@ -18,15 +19,17 @@ const jwt =
     ? JSON.parse(Buffer.from(process.env.TOKEN_CREATOR_JWT, 'hex').toString())
     : null;
 
+const logger = log4js.getLogger('smart-home');
+
 export const app = smarthome({jwt});
 
 // https://developers.google.com/assistant/smarthome/develop/process-intents#list-devices
 // https://developers.google.com/assistant/smarthome/reference/intent/sync
 app.onSync(body => {
   // TODO: get user ID from headers
-  console.log('SYNC received');
+  logger.debug('SYNC received');
   const deviceDefinitions = DeviceManager.instance.getDeviceDefinitions();
-  console.log(
+  logger.debug(
     `will return devices: ${inspect(deviceDefinitions.map(d => d.id))}`
   );
   return {
@@ -55,7 +58,7 @@ app.onQuery(body => {
 });
 
 app.onExecute(body => {
-  console.log('EXECUTE received');
+  logger.debug('EXECUTE received');
   const results: SmartHomeV1ExecuteResponseCommands[] = [];
   body.inputs.forEach(input => {
     input.payload.commands.forEach(command => {
@@ -78,7 +81,7 @@ function handleExecutePerDevice(
   device: SmartHomeV1QueryRequestDevices,
   executions: SmartHomeV1ExecuteRequestExecution[]
 ): SmartHomeV1ExecuteResponseCommands {
-  console.log(`handleExecutePerDevice: ${device.id}`);
+  logger.debug(`handleExecutePerDevice: ${device.id}`);
   const conn = DeviceManager.instance.getConnectionForDeviceId(device.id);
 
   if (!conn) {
@@ -91,7 +94,7 @@ function handleExecutePerDevice(
 
 export function requestSync() {
   if (process.env.LOCAL) {
-    console.log('requestSync skipped');
+    logger.info('env.LOCAL enabled. requestSync skipped.');
   } else {
     app.requestSync(agentUserId);
   }

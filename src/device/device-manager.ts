@@ -1,8 +1,8 @@
 import * as WebSocket from 'ws';
+import * as log4js from 'log4js';
 import {SmartHomeV1SyncDevices} from 'actions-on-google';
 
 import {smartHomeIface} from '../services';
-// import {requestSync} from '../routes/smart-home';
 import {inspect} from '../util';
 
 type DeviceSetId = string;
@@ -12,6 +12,8 @@ type DeviceSet = {
   lastRegistration: number;
   connection: WebSocket;
 };
+
+const logger = log4js.getLogger('device-mgr');
 
 export class DeviceManager {
   private static _singleton: DeviceManager;
@@ -36,7 +38,7 @@ export class DeviceManager {
       (acc, devset) => acc.concat(devset.deviceDefinitions),
       [] as SmartHomeV1SyncDevices[]
     );
-    console.log(`getDeviceDefinitions return ${inspect(ret)}`);
+    logger.debug(`getDeviceDefinitions return ${inspect(ret)}`);
     return ret;
   }
 
@@ -46,11 +48,11 @@ export class DeviceManager {
     deviceDefinitions: SmartHomeV1SyncDevices[]
   ) {
     if (this.deviceSets.has(deviceSetId)) {
-      console.log(
+      logger.debug(
         `update devset ${deviceSetId}: ${deviceDefinitions.map(d => d.id)}`
       );
     } else {
-      console.log(
+      logger.debug(
         `create devset ${deviceSetId}: ${deviceDefinitions.map(d => d.id)}`
       );
     }

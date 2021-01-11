@@ -2,6 +2,9 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+// Initialize log4js
+import './log';
+
 // Standard library
 import * as http from 'http';
 import * as net from 'net';
@@ -11,6 +14,7 @@ import * as express from 'express';
 import * as expressSession from 'express-session';
 import * as passport from 'passport';
 import * as errorHandler from 'errorhandler';
+import * as log4js from 'log4js';
 
 // Project Modules
 import {getSessionSecret} from './util';
@@ -103,11 +107,12 @@ function authorize(
   callback(err, socket);
 }
 
+const wsLogger = log4js.getLogger('ws');
 server.on('upgrade', (request, socket, head) => {
-  console.log(`upgrade from ${socket.remoteAddress}`);
+  wsLogger.debug(`upgrade from ${socket.remoteAddress}`);
   authorize(request, socket, head, (err, client) => {
     if (err || !client) {
-      console.log('unauthorized');
+      wsLogger.warn('unauthorized');
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       socket.destroy();
       return;
@@ -122,4 +127,6 @@ server.on('upgrade', (request, socket, head) => {
 // ----------------------------------------------------------------------------
 // Run Server
 // ----------------------------------------------------------------------------
-server.listen(PORT, () => console.log(`Listening to port ${PORT}...`));
+server.listen(PORT, () =>
+  log4js.getLogger().info(`Listening to port ${PORT}...`)
+);

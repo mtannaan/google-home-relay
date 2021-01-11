@@ -1,4 +1,6 @@
 import * as WebSocket from 'ws';
+import * as log4js from 'log4js';
+import {nanoid} from 'nanoid';
 
 // import {handleDeviceMessage, removeOldDevices} from '../device/device-iface';
 import {deviceIface} from '../services';
@@ -8,12 +10,14 @@ import {deviceIface} from '../services';
 // ----------------------------------------------------------------------------
 const wsPingInterval = 50 * 1000;
 const deviceAutoRemoveInterval = 5 * 60 * 1000;
+const logger = log4js.getLogger('ws');
 
 // ----------------------------------------------------------------------------
 // Types
 // ----------------------------------------------------------------------------
 interface WebSocketWithIsAlive extends WebSocket {
   isAlive: boolean;
+  id: string;
 }
 
 // ----------------------------------------------------------------------------
@@ -23,32 +27,38 @@ interface WebSocketWithIsAlive extends WebSocket {
 // ----------------------------------------------------------------------------
 export const wss = new WebSocket.Server({
   path: '/device-manager',
-  noServer: true,
+  noServer: true, // connections are initiated on http server "upgrade" event
 });
 
 // https://www.npmjs.com/package/ws#how-to-detect-and-close-broken-connections
 const checkConnectivity = (conn: WebSocketWithIsAlive) => {
   if (!conn.isAlive) {
+    logger.warn(`Terminating connection ${conn.id} due to isAlive = false.`);
     conn.terminate();
     return;
   }
   conn.isAlive = false;
-  conn.ping();
+  conn.ping(() => logger.debug(`ping has sent to connection ${conn.id}`));
 };
 
 wss.on('connection', (ws: WebSocketWithIsAlive, request) => {
   ws.isAlive = true;
-  console.log(`new connection accepted from ${request.socket.remoteAddress}`);
+  ws.id = nanoid(16);
+  logger.info(
+    `new connection ${ws.id} has been accepted from ${request.socket.remoteAddress}`
+  );
 
   const intervalTimers: NodeJS.Timeout[] = [];
   ws.on('open', () => {
     intervalTimers.push(setInterval(checkConnectivity, wsPingInterval, ws));
   })
     .on('pong', () => {
+      logger.debug(`pong received from connection ${ws.id}`);
       ws.isAlive = true;
     })
     .on('message', data => deviceIface.handleDeviceMessage(ws, data))
     .on('close', () => {
+      logger.debug(`Closing connection ${ws.id}`);
       while (Array.isArray(intervalTimers) && intervalTimers.length > 0) {
         clearInterval(intervalTimers.pop() as NodeJS.Timeout);
       }

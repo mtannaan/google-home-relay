@@ -6,9 +6,6 @@ const login = require('connect-ensure-login');
 module.exports.index = (request, response) => response.send('OAuth 2.0 Server');
 
 module.exports.loginForm = (request, response) => {
-  console.log(`request: ${request}`);
-  console.log(`session: ${request.session}`);
-
   return response.render('login');
 };
 

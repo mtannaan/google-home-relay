@@ -1,4 +1,5 @@
 import * as WebSocket from 'ws';
+import * as log4js from 'log4js';
 import {
   SmartHomeV1SyncDevices,
   SmartHomeV1QueryRequestDevices,
@@ -37,9 +38,10 @@ type ResponseMessage = {
 type Message = RegisterMessage | ExecuteMessage | ResponseMessage;
 
 const deviceManager = DeviceManager.instance;
+const logger = log4js.getLogger('device-iface');
 
 export function handleDeviceMessage(socket: WebSocket, data: WebSocket.Data) {
-  console.log(`recieved: ${data}`);
+  logger.debug(`recieved: ${data}`);
   const message: Message = JSON.parse(data.toString());
   switch (message.messageType) {
     case 'register':
@@ -47,17 +49,17 @@ export function handleDeviceMessage(socket: WebSocket, data: WebSocket.Data) {
       break;
 
     case 'response':
-      console.log(`response ${message}`);
+      logger.debug(`response ${message}`);
       break;
 
     default:
-      console.log(`unknown ${message}`);
+      logger.error(`unknown ${message}`);
       break;
   }
 }
 
 function handleRegisterMessage(socket: WebSocket, message: RegisterMessage) {
-  console.log('register');
+  logger.info('register');
   deviceManager.addMod(socket, message.deviceSetId, message.deviceDefinitions);
   sendResponseMessage(socket, message, true);
 }
@@ -106,7 +108,7 @@ export function removeOldDevices(wss: WebSocket.Server) {
       new Date().getTime() - devSet.lastRegistration >
       RegistrationInterval * (1 - GCMarginRatio)
     ) {
-      console.log(`gc ${conn.url}`);
+      logger.debug(`removeOldDevices: ${conn.url}`);
       conn.terminate();
       deviceManager.remove(conn);
     }
