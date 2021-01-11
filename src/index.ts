@@ -12,6 +12,9 @@ import * as expressSession from 'express-session';
 import * as passport from 'passport';
 import * as errorHandler from 'errorhandler';
 
+// Project Modules
+import {getSessionSecret} from './util';
+
 // Middlewares
 import {dumpRequestMW} from './middlewares/dump-request';
 import {dumpResponseMW} from './middlewares/dump-response';
@@ -48,7 +51,7 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 app.use(
   expressSession({
-    secret: 'FIXME: replace this with env var', // FIXME: replace this
+    secret: getSessionSecret(),
     resave: false,
     saveUninitialized: false,
   })

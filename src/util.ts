@@ -12,3 +12,11 @@ import * as util from 'util';
 export function inspect(object: unknown) {
   return util.inspect(object, false, null, true);
 }
+
+export function getSessionSecret() {
+  const envvar = process.env.SESSION_SECRET;
+  if (typeof envvar !== 'string' || envvar.length < 16) {
+    throw new Error(`invalid SESSION_SECRET: ${envvar}`);
+  }
+  return envvar.split(',');
+}
