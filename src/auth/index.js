@@ -1,11 +1,13 @@
 'use strict';
 
+const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const BasicStrategy = require('passport-http').BasicStrategy;
 const ClientPasswordStrategy = require('passport-oauth2-client-password')
   .Strategy;
 const BearerStrategy = require('passport-http-bearer').Strategy;
+
 const db = require('../db');
 
 /**
@@ -20,8 +22,11 @@ passport.use(
     db.users.findByUsername(username, (error, user) => {
       if (error) return done(error);
       if (!user) return done(null, false);
-      if (user.password !== password) return done(null, false);
-      return done(null, user);
+      bcrypt
+        .compare(password, user.password)
+        .then(success => done(null, success ? user : false));
+      // if (user.password !== password) return done(null, false);
+      // return done(null, user);
     });
   })
 );
