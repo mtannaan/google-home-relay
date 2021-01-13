@@ -110,9 +110,12 @@ export function init(sequelize: Sequelize) {
 }
 
 export function findById(
-  id: number,
+  id: number | null,
   done: (err: Error | null, user?: User) => void
 ) {
+  if (id === null) {
+    return done(new Error('User ID is null'));
+  }
   User.findByPk(id)
     .then(user => {
       if (user === null) {

@@ -11,6 +11,7 @@ const categories = [
   'device-mgr',
   'smart-home',
   'sequelize',
+  'oauth2',
 ];
 const defaultCategoryConfig = {appenders: ['default'], level: 'trace'};
 const config = {
