@@ -4,12 +4,6 @@ import {Strategy as LocalStrategy} from 'passport-local';
 import {BasicStrategy} from 'passport-http';
 import {Strategy as ClientPasswordStrategy} from 'passport-oauth2-client-password';
 import {Strategy as BearerStrategy} from 'passport-http-bearer';
-// const bcrypt = require('bcryptjs');
-// const passport = require('passport');
-// const LocalStrategy = require('passport-local').Strategy;
-// const BasicStrategy = require('passport-http').BasicStrategy;
-// const ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy;
-// const BearerStrategy = require('passport-http-bearer').Strategy;
 
 import * as db from '../db';
 // const db = require('../db');
@@ -52,12 +46,17 @@ passport.deserializeUser((id: number, done) => {
  * to the `Authorization` header). While this approach is not recommended by
  * the specification, in practice it is quite common.
  */
-function verifyClient(clientId: string, clientSecret: string, done) {
+function verifyClient(
+  clientId: string,
+  clientSecret: string,
+  done: (err: Error | null, client?: db.clients.Client | boolean) => void
+) {
   db.clients.findByClientId(clientId, (error, client) => {
     if (error) return done(error);
     if (!client) return done(null, false);
-    if (client.clientSecret !== clientSecret) return done(null, false);
-    return done(null, client);
+    bcrypt
+      .compare(clientSecret, client.clientSecret)
+      .then(ok => (ok ? done(null, client) : done(null, false)));
   });
 }
 
@@ -75,7 +74,8 @@ passport.use(new ClientPasswordStrategy(verifyClient));
  */
 passport.use(
   new BearerStrategy((accessToken, done) => {
-    db.accessTokens.find(accessToken, (error, token) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    db.accessTokens.find(accessToken, (error: Error | null, token: any) => {
       if (error) return done(error);
       if (!token) return done(null, false);
       if (token.userId) {

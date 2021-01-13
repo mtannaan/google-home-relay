@@ -11,13 +11,16 @@ const logger = log4js.getLogger('db');
  * Example user creation sql:
  * ```sql
  *  insert into
- *  "user"(username, password, name, "createdAt", "updatedAt")
+ *  users(username, password, name, "createdAt", "updatedAt")
  *  values ('yourusername', '%YOUR_PASSWORD_HASH%', 'readable user name', now(), now());
  * ```
  */
 export class User extends Model {
   id!: number;
   username!: string;
+  /**
+   * password hashed by bcrypt.hashSync
+   */
   password!: string;
   name!: string;
   /*
@@ -94,15 +97,14 @@ export function init(sequelize: Sequelize) {
       username: {
         type: DataTypes.STRING,
         unique: true,
+        allowNull: false,
       },
-      /**
-       * password hashed by bcrypt.hashSync
-       */
-      password: DataTypes.STRING,
-      name: DataTypes.STRING,
+      password: {type: DataTypes.STRING, allowNull: false},
+      name: {type: DataTypes.STRING, allowNull: false},
     },
     {
       sequelize,
+      tableName: 'users',
     }
   );
 }
