@@ -55,10 +55,10 @@ function issueTokens(
   db.users.findById(userId, (error, user) => {
     const accessToken = nanoid(256); // utils.getUid(256);
     const refreshToken = nanoid(256); // utils.getUid(256);
-    db.accessTokens.save(accessToken, userId, clientId, (error: Error) => {
+    db.accessTokens.save(accessToken, userId, clientId, error => {
       if (error) return done(error);
       logger.debug(`access token saved: ${accessToken}`);
-      db.refreshTokens.save(refreshToken, userId, clientId, (error: Error) => {
+      db.refreshTokens.save(refreshToken, userId, clientId, error => {
         if (error) return done(error);
         logger.debug(`refresh token saved: ${refreshToken}`);
         // Add custom params, e.g. the username
@@ -277,32 +277,26 @@ server.exchange(
         })
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      db.refreshTokens.find(refreshToken, (error: Error | null, token: any) => {
+      db.refreshTokens.find(refreshToken, (error, token) => {
         if (error) return done(error);
+        if (!token) return done(new Error('token not found'));
 
         logger.debug('refreshToken found');
         issueTokens(
-          token.id,
+          token.userId,
           client.clientId,
           (err, accessToken, refreshToken) => {
-            if (err) {
-              done(err);
-            }
+            if (err) done(err);
             db.accessTokens.removeByUserIdAndClientId(
               token.userId,
               token.clientId,
-              (err: Error | null) => {
-                if (err) {
-                  done(err);
-                }
+              err => {
+                if (err) done(err);
                 db.refreshTokens.removeByUserIdAndClientId(
                   token.userId,
                   token.clientId,
-                  (err: Error | null) => {
-                    if (err) {
-                      done(err);
-                    }
+                  err => {
+                    if (err) done(err);
                     done(null, accessToken, refreshToken);
                   }
                 );
@@ -380,9 +374,9 @@ export const authorization = [
       db.accessTokens.findByUserIdAndClientId(
         user.id,
         client.clientId,
-        (error: Error | null, token?: string) => {
+        (error, tokenInfo) => {
           // Auto-approve
-          if (token) {
+          if (tokenInfo) {
             logger.debug('token found for user/client id. approved.');
             return done(null, true, undefined, undefined);
           }

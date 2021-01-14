@@ -19,8 +19,9 @@ const init = async () =>
     });
 
     logger.debug('init models start');
-    users.init(sequelize);
-    clients.init(sequelize);
+    [users, clients, refreshTokens, accessTokens].forEach(m =>
+      m.init(sequelize)
+    );
     logger.debug('init models end');
 
     resolve(sequelize);

@@ -74,8 +74,7 @@ passport.use(new ClientPasswordStrategy(verifyClient));
  */
 passport.use(
   new BearerStrategy((accessToken, done) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    db.accessTokens.find(accessToken, (error: Error | null, token: any) => {
+    db.accessTokens.find(accessToken, (error, token) => {
       if (error) return done(error);
       if (!token) return done(null, false);
       if (token.userId) {

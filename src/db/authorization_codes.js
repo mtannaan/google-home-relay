@@ -1,5 +1,6 @@
 'use strict';
 
+const codeLifeTime = 10 * 60 * 1000;
 const codes = {};
 
 module.exports.find = (key, done) => {
@@ -9,5 +10,8 @@ module.exports.find = (key, done) => {
 
 module.exports.save = (code, clientId, redirectUri, userId, userName, done) => {
   codes[code] = {clientId, redirectUri, userId, userName};
+  setTimeout(() => {
+    delete codes[code];
+  }, codeLifeTime);
   done();
 };
