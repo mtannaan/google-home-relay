@@ -374,6 +374,11 @@ export const authorization = [
         return done(null, true, undefined, undefined);
       }
 
+      logger.debug('not trusted. asking user.');
+      // Otherwise ask user
+      return done(null, false, undefined, undefined);
+
+      /*
       db.accessTokens.findByUserIdAndClientId(
         user.id,
         client.clientId,
@@ -389,6 +394,7 @@ export const authorization = [
           return done(null, false, undefined, undefined);
         }
       );
+      */
     }
   ),
   (request: Request, response: Response) => {
