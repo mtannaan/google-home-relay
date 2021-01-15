@@ -12,6 +12,7 @@ const categories = [
   'smart-home',
   'sequelize',
   'oauth2',
+  'authenticator',
 ];
 const defaultCategoryConfig = {appenders: ['default'], level: 'trace'};
 const config = {

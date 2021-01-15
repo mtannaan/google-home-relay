@@ -1,3 +1,4 @@
+import * as log4js from 'log4js';
 import * as bcrypt from 'bcryptjs';
 import * as passport from 'passport';
 import {Strategy as LocalStrategy} from 'passport-local';
@@ -6,7 +7,8 @@ import {Strategy as ClientPasswordStrategy} from 'passport-oauth2-client-passwor
 import {Strategy as BearerStrategy} from 'passport-http-bearer';
 
 import * as db from '../db';
-// const db = require('../db');
+
+const logger = log4js.getLogger('authenticator');
 
 /**
  * LocalStrategy
@@ -74,6 +76,7 @@ passport.use(new ClientPasswordStrategy(verifyClient));
  */
 passport.use(
   new BearerStrategy((accessToken, done) => {
+    logger.debug('BearerStrategy invoked');
     db.accessTokens.find(accessToken, (error, token) => {
       if (error) return done(error);
       if (!token) return done(null, false);
