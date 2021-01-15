@@ -12,6 +12,7 @@ import * as net from 'net';
 // Third party modules
 import * as express from 'express';
 import * as expressSession from 'express-session';
+import * as ejsLayouts from 'express-ejs-layouts';
 import * as passport from 'passport';
 import * as errorHandler from 'errorhandler';
 import * as connectPgSimple from 'connect-pg-simple';
@@ -69,6 +70,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(customConnectLogger);
 app.use(errorHandler());
+app.use(ejsLayouts);
 
 // Passport configuration
 import './auth';
