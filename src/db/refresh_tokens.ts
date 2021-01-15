@@ -1,7 +1,14 @@
 import {Sequelize, Op} from 'sequelize';
+import * as bcrypt from 'bcryptjs';
 
 import {inspect} from '../util';
-import {logger, removeExpiredTokens, tokenInitObj, TokenBase} from './util';
+import {
+  logger,
+  removeExpiredTokens,
+  tokenInitObj,
+  TokenBase,
+  tokenSalt,
+} from './util';
 
 const refreshTokenLifetime = 100 * 24 * 60 * 60 * 1000;
 const refreshTokenPruningInterval = 1 * 60 * 60 * 1000;
@@ -21,23 +28,33 @@ export function find(
   done: (err: Error | null, tokenInfo?: RefreshToken) => void
 ) {
   logger.debug('refresh_tokens.find called:', key);
-  RefreshToken.findOne({
-    where: {token: key, expiresAt: {[Op.gt]: new Date()}},
-  }).then(tokenInfo => {
-    if (!tokenInfo) {
-      logger.warn('refresh token not found');
-      return done(new Error('refresh token not found'));
-    }
-    done(null, tokenInfo);
-  });
+  bcrypt
+    .hash(key, tokenSalt)
+    .then(hash =>
+      RefreshToken.findOne({
+        where: {token: hash, expiresAt: {[Op.gt]: new Date()}},
+      })
+    )
+    .then(tokenInfo => {
+      if (!tokenInfo) {
+        logger.warn('refresh token not found');
+        return done(new Error('refresh token not found'));
+      }
+      done(null, tokenInfo);
+    });
 }
 
-export function save(token: string, userId: number | null, clientId: string) {
+export async function save(
+  token: string,
+  userId: number | null,
+  clientId: string
+) {
   logger.debug(
     `refresh_tokens.save called for user id ${userId} and clientId ${clientId}`
   );
   const expiresAt = new Date(Date.now() + refreshTokenLifetime);
-  RefreshToken.create({token, userId, clientId, expiresAt});
+  const hash = await bcrypt.hash(token, tokenSalt);
+  return await RefreshToken.create({token: hash, userId, clientId, expiresAt});
 }
 
 export function removeByUserIdAndClientId(

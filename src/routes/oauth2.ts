@@ -44,8 +44,6 @@ server.deserializeClient((id, done) => {
   });
 });
 
-class RefreshTokenSkipped extends Error {}
-
 function issueTokens(
   userId: number | null,
   clientId: string,
@@ -57,37 +55,19 @@ function issueTokens(
 ) {
   logger.debug(`issueTokens called for user ${userId} and client ${clientId}`);
 
-  db.users.findById(userId, (error, user) => {
+  db.users.findById(userId, async (_error, user) => {
     if (!user) return done(new Error('user id not found'));
 
-    const accessToken = nanoid(256); // utils.getUid(256);
-    const refreshToken = nanoid(256); // utils.getUid(256);
-    bcrypt
-      .hash(accessToken, 10)
-      .then(accessTokenHash =>
-        db.accessTokens.save(accessTokenHash, userId, clientId)
-      )
-      .then(() => {
-        logger.debug(`access token saved: ${accessToken}`);
-        if (!needsRefreshToken) {
-          throw new RefreshTokenSkipped();
-        }
-        return bcrypt.hash(refreshToken, 10);
-      })
-      .then(refreshTokenHash => {
-        db.refreshTokens.save(refreshTokenHash, userId, clientId);
-      })
-      .then(() => {
-        logger.debug(`refresh token saved: ${refreshToken}`);
-        return done(null, accessToken, refreshToken, commonTokenParams);
-      })
-      .catch(reason => {
-        if (reason instanceof RefreshTokenSkipped) {
-          return done(null, accessToken, commonTokenParams);
-        } else {
-          throw reason;
-        }
-      });
+    const accessToken = nanoid(256);
+    const refreshToken = nanoid(256);
+    await db.accessTokens.save(accessToken, userId, clientId);
+    logger.debug(`access token saved: ${accessToken}`);
+    if (!needsRefreshToken) {
+      return done(null, accessToken, commonTokenParams);
+    }
+    await db.refreshTokens.save(refreshToken, userId, clientId);
+    logger.debug(`refresh token saved: ${refreshToken}`);
+    return done(null, accessToken, refreshToken, commonTokenParams);
   });
 }
 
