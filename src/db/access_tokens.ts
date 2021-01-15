@@ -1,4 +1,4 @@
-import {Sequelize} from 'sequelize';
+import {Sequelize, Op} from 'sequelize';
 
 import {inspect} from '../util';
 import {
@@ -24,7 +24,9 @@ export function find(
   done: (err: Error | null, tokenInfo?: AccessToken) => void
 ) {
   logger.debug('access_tokens.find called:', key);
-  AccessToken.findOne({where: {token: key}}).then(tokenInfo => {
+  AccessToken.findOne({
+    where: {token: key, expiresAt: {[Op.gt]: new Date()}},
+  }).then(tokenInfo => {
     if (!tokenInfo) {
       logger.warn('access token not found');
       return done(new Error('access token not found'));
@@ -33,39 +35,12 @@ export function find(
   });
 }
 
-export function findByUserIdAndClientId(
-  userId: number | null,
-  clientId: string,
-  done: (err: Error | null, tokenInfo?: AccessToken) => void
-) {
-  logger.debug(
-    `access_tokens.findByUserIdAndClientId called for user id ${userId} and clientId ${clientId}`
-  );
-  AccessToken.findOne({where: {userId, clientId}}).then(tokenInfo => {
-    if (!tokenInfo) {
-      logger.warn('access token not found');
-      return done(new Error('access token not found'));
-    }
-    done(null, tokenInfo);
-  });
-}
-
-export function save(
-  token: string,
-  userId: number | null,
-  clientId: string,
-  done: (err: Error | null) => void
-) {
+export function save(token: string, userId: number | null, clientId: string) {
   logger.debug(
     `access_tokens.save called for user id ${userId} and clientId ${clientId}`
   );
   const expiresAt = new Date(Date.now() + tokenLifetimeInSeconds * 1000);
-  AccessToken.create({token, userId, clientId, expiresAt})
-    .then(() => done(null))
-    .catch(err => {
-      logger.error(`error creating access token: ${inspect(err)}`);
-      done(err);
-    });
+  return AccessToken.create({token, userId, clientId, expiresAt});
 }
 
 export function removeByUserIdAndClientId(

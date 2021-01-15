@@ -11,6 +11,10 @@ import {inspect} from '../util';
 
 const logger = getLogger('oauth2');
 
+const commonTokenParams = {
+  expires_in: db.tokenLifetimeInSeconds.toString(),
+};
+
 // Create OAuth 2.0 server
 const server = oauth2orize.createServer();
 
@@ -40,35 +44,50 @@ server.deserializeClient((id, done) => {
   });
 });
 
-type IssueTokensDoneFunction = (
-  error: Error | null,
-  accessToken?: string,
-  refreshToken?: string,
-  params?: Object
-) => void;
+class RefreshTokenSkipped extends Error {}
+
 function issueTokens(
   userId: number | null,
   clientId: string,
-  done: IssueTokensDoneFunction
+  needsRefreshToken: boolean,
+  done:
+    | oauth2orize.ExchangeDoneFunction
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | ((err: Error | null, token?: string, params?: any) => void)
 ) {
   logger.debug(`issueTokens called for user ${userId} and client ${clientId}`);
+
   db.users.findById(userId, (error, user) => {
     if (!user) return done(new Error('user id not found'));
+
     const accessToken = nanoid(256); // utils.getUid(256);
     const refreshToken = nanoid(256); // utils.getUid(256);
-    db.accessTokens.save(accessToken, userId, clientId, error => {
-      if (error) return done(error);
-      logger.debug(`access token saved: ${accessToken}`);
-      db.refreshTokens.save(refreshToken, userId, clientId, error => {
-        if (error) return done(error);
+    bcrypt
+      .hash(accessToken, 10)
+      .then(accessTokenHash =>
+        db.accessTokens.save(accessTokenHash, userId, clientId)
+      )
+      .then(() => {
+        logger.debug(`access token saved: ${accessToken}`);
+        if (!needsRefreshToken) {
+          throw new RefreshTokenSkipped();
+        }
+        return bcrypt.hash(refreshToken, 10);
+      })
+      .then(refreshTokenHash => {
+        db.refreshTokens.save(refreshTokenHash, userId, clientId);
+      })
+      .then(() => {
         logger.debug(`refresh token saved: ${refreshToken}`);
-        // Add custom params, e.g. the username
-        const params = {
-          expires_in: db.tokenLifetimeInSeconds.toString(),
-        };
-        return done(null, accessToken, refreshToken, params);
+        return done(null, accessToken, refreshToken, commonTokenParams);
+      })
+      .catch(reason => {
+        if (reason instanceof RefreshTokenSkipped) {
+          return done(null, accessToken, commonTokenParams);
+        } else {
+          throw reason;
+        }
       });
-    });
   });
 }
 
@@ -139,7 +158,7 @@ server.grant(
         ares,
       })
     );
-    issueTokens(user.id, client.clientId, done);
+    issueTokens(user.id, client.clientId, false, done);
   })
 );
 
@@ -176,7 +195,7 @@ server.exchange(
       }
 
       logger.debug('auth code ok');
-      issueTokens(authCode.userId, client.clientId, done);
+      issueTokens(authCode.userId, client.clientId, true, done);
     });
   })
 );
@@ -220,7 +239,7 @@ server.exchange(
                 return done(null, false);
               }
               // Everything validated, return the token
-              issueTokens(user.id, client.clientId, done);
+              issueTokens(user.id, client.clientId, true, done);
             });
           });
         });
@@ -259,7 +278,7 @@ server.exchange(
             }
             // Everything validated, return the token
             // Pass in a null for user id since there is no user with this grant type
-            issueTokens(null, client.clientId, done);
+            issueTokens(null, client.clientId, false, done);
           });
       });
     }
@@ -285,28 +304,29 @@ server.exchange(
         if (!token) return done(new Error('token not found'));
 
         logger.debug('refreshToken found');
-        issueTokens(
-          token.userId,
-          client.clientId,
-          (err, accessToken, refreshToken) => {
-            if (err) done(err);
-            db.accessTokens.removeByUserIdAndClientId(
-              token.userId,
-              token.clientId,
-              err => {
-                if (err) done(err);
-                db.refreshTokens.removeByUserIdAndClientId(
-                  token.userId,
-                  token.clientId,
-                  err => {
-                    if (err) done(err);
-                    done(null, accessToken, refreshToken);
-                  }
-                );
-              }
-            );
-          }
-        );
+        issueTokens(token.userId, client.clientId, true, ((
+          err,
+          accessToken,
+          refreshToken,
+          params
+        ) => {
+          if (err) done(err);
+          db.accessTokens.removeByUserIdAndClientId(
+            token.userId,
+            token.clientId,
+            err => {
+              if (err) done(err);
+              db.refreshTokens.removeByUserIdAndClientId(
+                token.userId,
+                token.clientId,
+                err => {
+                  if (err) done(err);
+                  done(null, accessToken, refreshToken, params);
+                }
+              );
+            }
+          );
+        }) as oauth2orize.ExchangeDoneFunction);
       });
     }
   )

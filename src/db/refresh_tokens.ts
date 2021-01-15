@@ -1,13 +1,10 @@
-import {Sequelize} from 'sequelize';
+import {Sequelize, Op} from 'sequelize';
 
 import {inspect} from '../util';
-import {
-  tokenLifetimeInSeconds,
-  logger,
-  removeExpiredTokens,
-  tokenInitObj,
-  TokenBase,
-} from './util';
+import {logger, removeExpiredTokens, tokenInitObj, TokenBase} from './util';
+
+const refreshTokenLifetime = 100 * 24 * 60 * 60 * 1000;
+const refreshTokenPruningInterval = 1 * 60 * 60 * 1000;
 
 export class RefreshToken extends TokenBase {}
 
@@ -16,7 +13,7 @@ export function init(sequelize: Sequelize) {
     sequelize,
     tableName: 'refresh_tokens',
   });
-  setInterval(removeExpiredTokens, tokenLifetimeInSeconds * 1000, RefreshToken);
+  setInterval(removeExpiredTokens, refreshTokenPruningInterval, RefreshToken);
 }
 
 export function find(
@@ -24,7 +21,9 @@ export function find(
   done: (err: Error | null, tokenInfo?: RefreshToken) => void
 ) {
   logger.debug('refresh_tokens.find called:', key);
-  RefreshToken.findOne({where: {token: key}}).then(tokenInfo => {
+  RefreshToken.findOne({
+    where: {token: key, expiresAt: {[Op.gt]: new Date()}},
+  }).then(tokenInfo => {
     if (!tokenInfo) {
       logger.warn('refresh token not found');
       return done(new Error('refresh token not found'));
@@ -33,39 +32,12 @@ export function find(
   });
 }
 
-export function findByUserIdAndClientId(
-  userId: number | null,
-  clientId: string,
-  done: (err: Error | null, tokenInfo?: RefreshToken) => void
-) {
-  logger.debug(
-    `refresh_tokens.findByUserIdAndClientId called for user id ${userId} and clientId ${clientId}`
-  );
-  RefreshToken.findOne({where: {userId, clientId}}).then(tokenInfo => {
-    if (!tokenInfo) {
-      logger.warn('refresh token not found');
-      return done(new Error('refresh token not found'));
-    }
-    done(null, tokenInfo);
-  });
-}
-
-export function save(
-  token: string,
-  userId: number | null,
-  clientId: string,
-  done: (err: Error | null) => void
-) {
+export function save(token: string, userId: number | null, clientId: string) {
   logger.debug(
     `refresh_tokens.save called for user id ${userId} and clientId ${clientId}`
   );
-  const expiresAt = new Date(Date.now() + tokenLifetimeInSeconds * 1000);
-  RefreshToken.create({token, userId, clientId, expiresAt})
-    .then(() => done(null))
-    .catch(err => {
-      logger.error(`error creating refresh token: ${inspect(err)}`);
-      done(err);
-    });
+  const expiresAt = new Date(Date.now() + refreshTokenLifetime);
+  RefreshToken.create({token, userId, clientId, expiresAt});
 }
 
 export function removeByUserIdAndClientId(
