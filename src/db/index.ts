@@ -27,4 +27,5 @@ const init = async () =>
     resolve(sequelize);
   });
 
+export {tokenLifetimeInSeconds} from './util';
 export {users, clients, accessTokens, authorizationCodes, refreshTokens, init};

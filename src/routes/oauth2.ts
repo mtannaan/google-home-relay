@@ -53,6 +53,7 @@ function issueTokens(
 ) {
   logger.debug(`issueTokens called for user ${userId} and client ${clientId}`);
   db.users.findById(userId, (error, user) => {
+    if (!user) return done(new Error('user id not found'));
     const accessToken = nanoid(256); // utils.getUid(256);
     const refreshToken = nanoid(256); // utils.getUid(256);
     db.accessTokens.save(accessToken, userId, clientId, error => {
@@ -62,7 +63,9 @@ function issueTokens(
         if (error) return done(error);
         logger.debug(`refresh token saved: ${refreshToken}`);
         // Add custom params, e.g. the username
-        const params = {username: user?.name};
+        const params = {
+          expires_in: db.tokenLifetimeInSeconds.toString(),
+        };
         return done(null, accessToken, refreshToken, params);
       });
     });

@@ -1,53 +1,22 @@
-import {Sequelize, Model, DataTypes, Op} from 'sequelize';
-import * as log4js from 'log4js';
+import {Sequelize} from 'sequelize';
 
 import {inspect} from '../util';
+import {
+  tokenLifetimeInSeconds,
+  logger,
+  removeExpiredTokens,
+  tokenInitObj,
+  TokenBase,
+} from './util';
 
-const tokenLifetime = 3 * 24 * 60 * 60 * 1000;
-const logger = log4js.getLogger('db');
-
-export class AccessToken extends Model {
-  token!: string;
-  userId!: number | null;
-  clientId!: string;
-  expiresAt!: Date;
-}
+export class AccessToken extends TokenBase {}
 
 export function init(sequelize: Sequelize) {
-  AccessToken.init(
-    {
-      token: {
-        type: DataTypes.STRING(256),
-        allowNull: false,
-      },
-      userId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      clientId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      expiresAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-    },
-    {
-      sequelize,
-      tableName: 'access_tokens',
-    }
-  );
-  setInterval(removeExpiredTokens, tokenLifetime);
-}
-
-function removeExpiredTokens() {
-  logger.debug('access_tokens.removeExpiredTokens called');
-  AccessToken.destroy({where: {expiresAt: {[Op.gt]: new Date()}}})
-    .then(n => logger.debug(`${n} tokens removed.`))
-    .catch(err => {
-      logger.error(inspect(err));
-    });
+  AccessToken.init(tokenInitObj, {
+    sequelize,
+    tableName: 'access_tokens',
+  });
+  setInterval(removeExpiredTokens, tokenLifetimeInSeconds * 1000, AccessToken);
 }
 
 export function find(
@@ -90,7 +59,7 @@ export function save(
   logger.debug(
     `access_tokens.save called for user id ${userId} and clientId ${clientId}`
   );
-  const expiresAt = new Date(Date.now() + tokenLifetime);
+  const expiresAt = new Date(Date.now() + tokenLifetimeInSeconds * 1000);
   AccessToken.create({token, userId, clientId, expiresAt})
     .then(() => done(null))
     .catch(err => {
