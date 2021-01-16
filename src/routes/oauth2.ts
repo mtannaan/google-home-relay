@@ -65,9 +65,12 @@ function issueTokens(
     if (!needsRefreshToken) {
       return done(null, accessToken, commonTokenParams);
     }
-    await db.refreshTokens.save(refreshToken, userId, clientId);
-    logger.debug(`refresh token saved: ${refreshToken}`);
-    return done(null, accessToken, refreshToken, commonTokenParams);
+    db.refreshTokens.removeByUserIdAndClientId(userId, clientId, async err => {
+      if (err) return done(err);
+      await db.refreshTokens.save(refreshToken, userId, clientId);
+      logger.debug(`refresh token saved: ${refreshToken}`);
+      return done(null, accessToken, refreshToken, commonTokenParams);
+    });
   });
 }
 
@@ -284,29 +287,7 @@ server.exchange(
         if (!token) return done(new Error('token not found'));
 
         logger.debug('refreshToken found');
-        issueTokens(token.userId, client.clientId, true, ((
-          err,
-          accessToken,
-          refreshToken,
-          params
-        ) => {
-          if (err) done(err);
-          db.accessTokens.removeByUserIdAndClientId(
-            token.userId,
-            token.clientId,
-            err => {
-              if (err) done(err);
-              db.refreshTokens.removeByUserIdAndClientId(
-                token.userId,
-                token.clientId,
-                err => {
-                  if (err) done(err);
-                  done(null, accessToken, refreshToken, params);
-                }
-              );
-            }
-          );
-        }) as oauth2orize.ExchangeDoneFunction);
+        issueTokens(token.userId, client.clientId, true, done);
       });
     }
   )

@@ -1,4 +1,4 @@
-import {Sequelize, Op} from 'sequelize';
+import {Sequelize, Op, DataTypes} from 'sequelize';
 import * as bcrypt from 'bcryptjs';
 
 import {inspect} from '../util';
@@ -6,18 +6,44 @@ import {
   tokenLifetimeInSeconds,
   logger,
   removeExpiredTokens,
-  tokenInitObj,
   TokenBase,
   tokenSalt,
 } from './util';
 
+// foreign keys
+import {User} from './users';
+import {Client} from './clients';
+
 export class AccessToken extends TokenBase {}
 
 export function init(sequelize: Sequelize) {
-  AccessToken.init(tokenInitObj, {
-    sequelize,
-    tableName: 'access_tokens',
-  });
+  AccessToken.init(
+    {
+      token: {type: DataTypes.STRING(256), allowNull: false},
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {model: User, key: 'id'},
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      },
+      clientId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {model: Client, key: 'clientId'},
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      },
+      expiresAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'access_tokens',
+    }
+  );
   setInterval(removeExpiredTokens, tokenLifetimeInSeconds * 1000, AccessToken);
 }
 

@@ -7,7 +7,6 @@ import {log4js, customConnectLogger} from './log';
 
 // Standard library
 import * as http from 'http';
-import * as net from 'net';
 
 // Third party modules
 import * as express from 'express';
@@ -81,9 +80,9 @@ import './auth';
 app.get('/ping', (req, res) => {
   res.send('pong');
 });
-// app.use('/auth', authProviderApp);
+
 app.post('/fulfillment', [
-  passport.authenticate('bearer', {session: false}),
+  passport.authenticate('bearer', {session: false, scope: 'smart-home-api'}),
   apps.smartHomeApp,
 ]);
 
@@ -100,30 +99,46 @@ app.post('/oauth/token', oauth2Routes.token);
 // ----------------------------------------------------------------------------
 // Accept WebSocket Connection
 // ----------------------------------------------------------------------------
-function authorize(
-  request: http.IncomingMessage,
-  socket: net.Socket,
-  head: Buffer,
-  callback: (err: null, client: net.Socket) => void
-) {
-  const err = null; // TODO: authorization here
-  callback(err, socket);
-}
 
 const wsLogger = log4js.getLogger('ws');
-server.on('upgrade', (request, socket, head) => {
+server.on('upgrade', (req, socket, head) => {
   wsLogger.debug(`upgrade from ${socket.remoteAddress}`);
-  authorize(request, socket, head, (err, client) => {
-    if (err || !client) {
-      wsLogger.warn('unauthorized');
+
+  let token: string | null = null;
+  if (req.headers && req.headers.authorization) {
+    const parts = req.headers.authorization.split(' ');
+    if (parts.length === 2) {
+      const scheme = parts[0],
+        credentials = parts[1];
+
+      if (/^Bearer$/i.test(scheme)) {
+        token = credentials;
+      }
+    }
+  }
+
+  db.accessTokens.find(token || '#nonsense#', (err, tokenInfo) => {
+    if (err || !tokenInfo) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       socket.destroy();
       return;
     }
+    db.scopes
+      .findByUserAndClient(tokenInfo.userId, tokenInfo.clientId)
+      .then(scopes => {
+        if (
+          !scopes ||
+          (!scopes.includes('*') && !scopes.includes('device-manager'))
+        ) {
+          socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+          socket.destroy();
+          return;
+        }
 
-    apps.wss.handleUpgrade(request, socket, head, (ws, request) => {
-      apps.wss.emit('connection', ws, request, client);
-    });
+        apps.wss.handleUpgrade(req, socket, head, (ws, request) => {
+          apps.wss.emit('connection', ws, request, socket);
+        });
+      });
   });
 });
 

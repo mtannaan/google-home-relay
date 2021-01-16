@@ -1,14 +1,12 @@
-import {Sequelize, Op} from 'sequelize';
+import {Sequelize, Op, DataTypes} from 'sequelize';
 import * as bcrypt from 'bcryptjs';
 
 import {inspect} from '../util';
-import {
-  logger,
-  removeExpiredTokens,
-  tokenInitObj,
-  TokenBase,
-  tokenSalt,
-} from './util';
+import {logger, removeExpiredTokens, TokenBase, tokenSalt} from './util';
+
+// foreign keys
+import {User} from './users';
+import {Client} from './clients';
 
 const refreshTokenLifetime = 100 * 24 * 60 * 60 * 1000;
 const refreshTokenPruningInterval = 1 * 60 * 60 * 1000;
@@ -16,10 +14,33 @@ const refreshTokenPruningInterval = 1 * 60 * 60 * 1000;
 export class RefreshToken extends TokenBase {}
 
 export function init(sequelize: Sequelize) {
-  RefreshToken.init(tokenInitObj, {
-    sequelize,
-    tableName: 'refresh_tokens',
-  });
+  RefreshToken.init(
+    {
+      token: {type: DataTypes.STRING(256), allowNull: false},
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {model: User, key: 'id'},
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      },
+      clientId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {model: Client, key: 'clientId'},
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      },
+      expiresAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'refresh_tokens',
+    }
+  );
   setInterval(removeExpiredTokens, refreshTokenPruningInterval, RefreshToken);
 }
 

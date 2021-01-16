@@ -1,5 +1,5 @@
 import * as log4js from 'log4js';
-import {Model, DataTypes, Op} from 'sequelize';
+import {Model, Op} from 'sequelize';
 
 import {inspect} from '../util';
 export const logger = log4js.getLogger('db');
@@ -12,6 +12,7 @@ if (!tokenSalt) {
 }
 
 export class TokenBase extends Model {
+  id!: number;
   token!: string;
   userId!: number | null;
   clientId!: string;
@@ -26,22 +27,3 @@ export function removeExpiredTokens(TokenType: typeof TokenBase) {
       logger.error(inspect(err));
     });
 }
-
-export const tokenInitObj = {
-  token: {
-    type: DataTypes.STRING(256),
-    allowNull: false,
-  },
-  userId: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-  },
-  clientId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  expiresAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-};

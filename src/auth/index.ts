@@ -77,28 +77,35 @@ passport.use(new ClientPasswordStrategy(verifyClient));
 passport.use(
   new BearerStrategy((accessToken, done) => {
     logger.debug('BearerStrategy invoked');
-    db.accessTokens.find(accessToken, (error, token) => {
+    db.accessTokens.find(accessToken, async (error, token) => {
       if (error) return done(error);
       if (!token) return done(null, false);
-      if (token.userId) {
-        db.users.findById(token.userId, (error, user) => {
-          if (error) return done(error);
-          if (!user) return done(null, false);
-          // To keep this example simple, restricted scopes are not implemented,
-          // and this is just for illustrative purposes.
-          done(null, user, {scope: '*'});
-        });
-      } else {
-        // The request came from a client only since userId is null,
-        // therefore the client is passed back instead of a user.
-        db.clients.findByClientId(token.clientId, (error, client) => {
-          if (error) return done(error);
-          if (!client) return done(null, false);
-          // To keep this example simple, restricted scopes are not implemented,
-          // and this is just for illustrative purposes.
-          done(null, client, {scope: '*'});
-        });
-      }
+
+      db.clients.findByClientId(token.clientId, async (error, client) => {
+        if (error) return done(error);
+        if (!client) return done(null, false);
+
+        if (token.userId) {
+          db.users.findById(token.userId, async (error, user) => {
+            if (error) return done(error);
+            if (!user) return done(null, false);
+
+            const scopes = await db.scopes.findByUserAndClient(
+              user.id,
+              client.clientId
+            );
+            if (!scopes) return done(null, false);
+            return done(null, user, {scope: scopes});
+          });
+        } else {
+          const scopes = await db.scopes.findByUserAndClient(
+            null,
+            client.clientId
+          );
+          if (!scopes) return done(null, false);
+          return done(null, null, {scope: scopes});
+        }
+      });
     });
   })
 );
