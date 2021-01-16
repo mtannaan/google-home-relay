@@ -18,7 +18,7 @@ import * as connectPgSimple from 'connect-pg-simple';
 const pgSession = connectPgSimple(expressSession);
 
 // Project Modules
-import {getSessionSecret} from './util';
+import {getSessionSecret, inspect} from './util';
 import * as db from './db';
 
 // Routes & Sub-Apps
@@ -103,6 +103,7 @@ app.post('/oauth/token', oauth2Routes.token);
 const wsLogger = log4js.getLogger('ws');
 server.on('upgrade', (req, socket, head) => {
   wsLogger.debug(`upgrade from ${socket.remoteAddress}`);
+  wsLogger.debug(`headers: ${inspect(req.headers)}`);
 
   let token: string | null = null;
   if (req.headers && req.headers.authorization) {

@@ -32,12 +32,12 @@ const server = oauth2orize.createServer();
 // the client by ID from the database.
 
 server.serializeClient((client: db.clients.Client, done) => {
-  logger.trace(`serializeClient called for id ${client.id}`);
+  logger.debug(`serializeClient called for id ${client.id}`);
   done(null, client.id.toString());
 });
 
 server.deserializeClient((id, done) => {
-  logger.trace(`deserializeClient called for id ${id}`);
+  logger.debug(`deserializeClient called for id ${id}`);
   db.clients.findById(parseInt(id), (error, client) => {
     if (error) return done(error);
     done(null, client);
@@ -56,7 +56,7 @@ function issueTokens(
   logger.debug(`issueTokens called for user ${userId} and client ${clientId}`);
 
   db.users.findById(userId, async (_error, user) => {
-    if (!user) return done(new Error('user id not found'));
+    if (userId !== null && !user) return done(new Error('user id not found'));
 
     const accessToken = nanoid(256);
     const refreshToken = nanoid(256);
@@ -238,32 +238,16 @@ server.exchange(
 
 server.exchange(
   oauth2orize.exchange.clientCredentials(
-    (client: db.clients.Client, scope, done) => {
+    {},
+    (client: db.clients.Client, scope, body, authInfo, done) => {
       logger.debug('exchange.clientCredentials called');
-      logger.debug(
-        'params:',
-        inspect({
-          client: client?.clientId,
-          scope,
-        })
-      );
+      logger.debug('params:', inspect({client, scope, body, authInfo}));
 
-      // Validate the client
-      db.clients.findByClientId(client.clientId, (error, localClient) => {
-        if (error) return done(error);
-        if (!localClient) return done(null, false);
-        bcrypt
-          .compare(client.clientSecret, localClient.clientSecret)
-          .then(ok => {
-            if (!ok) {
-              logger.warn('client secret unmatch');
-              return done(null, false);
-            }
-            // Everything validated, return the token
-            // Pass in a null for user id since there is no user with this grant type
-            issueTokens(null, client.clientId, false, done);
-          });
-      });
+      if (client && client.isTrusted) {
+        issueTokens(null, client.clientId, false, done);
+      } else {
+        done(null, false);
+      }
     }
   )
 );

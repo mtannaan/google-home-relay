@@ -53,7 +53,7 @@ export function findById(
   done: (err: Error | null, user?: User) => void
 ) {
   if (id === null) {
-    return done(new Error('User ID is null'));
+    return done(null);
   }
   User.findByPk(id)
     .then(user => {
