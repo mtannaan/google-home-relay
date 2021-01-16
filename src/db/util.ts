@@ -21,7 +21,7 @@ export class TokenBase extends Model {
 
 export function removeExpiredTokens(TokenType: typeof TokenBase) {
   logger.debug(`removeExpiredTokens called for ${TokenType}`);
-  TokenType.destroy({where: {expiresAt: {[Op.gt]: new Date()}}})
+  TokenType.destroy({where: {expiresAt: {[Op.lt]: new Date()}}})
     .then(n => logger.debug(`${n} tokens removed.`))
     .catch(err => {
       logger.error(inspect(err));
