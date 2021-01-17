@@ -16,8 +16,8 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint",
-    "preinstall": "npx npm-force-resolutions",
-    "postinstall": "typesync && npm install --ignore-scripts",
+    "backup_preinstall": "npx npm-force-resolutions",
+    "backup_postinstall": "typesync && npm install --ignore-scripts",
     "init-dotenv": "node util/init-dotenv.js"
   },
   "repository": {
