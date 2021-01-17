@@ -8,6 +8,7 @@ import {logger, removeExpiredTokens, TokenBase, tokenSalt} from './util';
 import {User} from './users';
 import {Client} from './clients';
 
+// Require re-login if no usage for 100 days
 const refreshTokenLifetime = 100 * 24 * 60 * 60 * 1000;
 const refreshTokenPruningInterval = 1 * 60 * 60 * 1000;
 

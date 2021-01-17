@@ -4,7 +4,8 @@ import {Model, Op} from 'sequelize';
 import {inspect} from '../util';
 export const logger = log4js.getLogger('db');
 
-export const tokenLifetimeInSeconds = 60 * 60; // 1h
+export const tokenLifetimeInSeconds =
+  parseInt(process.env.TOKEN_LIFETIME as string) || 60 * 60; // 1h
 
 export const tokenSalt = process.env.TOKEN_SALT as string;
 if (!tokenSalt) {
