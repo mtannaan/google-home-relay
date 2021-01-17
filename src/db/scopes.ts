@@ -7,16 +7,6 @@ import {Client} from './clients';
 
 const logger = log4js.getLogger('db');
 
-/**
- * scope model.
- *
- * Example user creation sql:
- * ```sql
- *  insert into
- *  scopes("userId", "clientId", scopes, "createdAt", "updatedAt")
- *  values (%id%, '%clientId%', '%scope-name%', now(), now());
- * ```
- */
 export class Scope extends Model {
   userId!: number | null;
   clientId!: string;

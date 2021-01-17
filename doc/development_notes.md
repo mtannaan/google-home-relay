@@ -1,12 +1,5 @@
 # Development Notes (Internal)
 
-- [x] Express.js w/ TypeScript
-- [x] Deploy to Heroku
-- [x] Add OAuth (toy)
-- [ ] Add dummy fulfillment
-- [ ] Add relay
-- [ ] Add OAuth (secure)
-
 ## Create Project
 
 ```sh
@@ -99,3 +92,7 @@ $ heroku ps:scale web=0
 $ heroku ps:scale web=1
 ```
 
+## OAuth2 Server
+Used oauthorize.
+
+Based on this example: https://github.com/awais786327/oauth2orize-examples

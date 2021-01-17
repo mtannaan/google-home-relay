@@ -2,5 +2,7 @@
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
-    }
+    },
+    "editor.tabSize": 2,
+    "prettier.disableLanguages": ["markdown"]
 }

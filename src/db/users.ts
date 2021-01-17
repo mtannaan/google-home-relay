@@ -5,16 +5,6 @@ import {inspect} from '../util';
 
 const logger = log4js.getLogger('db');
 
-/**
- * user model.
- *
- * Example user creation sql:
- * ```sql
- *  insert into
- *  users(username, password, name, "createdAt", "updatedAt")
- *  values ('yourusername', '%YOUR_PASSWORD_HASH%', 'readable user name', now(), now());
- * ```
- */
 export class User extends Model {
   id!: number;
   username!: string;

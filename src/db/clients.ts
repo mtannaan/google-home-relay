@@ -5,16 +5,6 @@ import {inspect} from '../util';
 
 const logger = log4js.getLogger('db');
 
-/**
- * client model.
- *
- * Example client creation sql:
- * ```sql
- *  insert into
- *  clients ("clientId", "clientSecret", name, "isTrusted", "createdAt", "updatedAt")
- *  values ('yourclientname', '%YOUR_PASSWORD_HASH%', 'readable client name', FALSE, now(), now());
- * ```
- */
 export class Client extends Model {
   id!: number;
   clientId!: string;
