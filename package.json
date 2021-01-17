@@ -2,7 +2,7 @@
   "name": "google-home-relay",
   "version": "0.1.0",
   "engines": {
-    "node": "^10.17.0 || >=11.14.0"
+    "node": "~10.17 || >=11.14.0"
   },
   "description": "Smart Home service fulfillment that simply relays requests to another server",
   "main": "build/index.js",
