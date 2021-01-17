@@ -1,6 +1,9 @@
 {
   "name": "google-home-relay",
   "version": "0.1.0",
+  "engines": {
+    "node": "^10.17.0 || >=11.14.0"
+  },
   "description": "Smart Home service fulfillment that simply relays requests to another server",
   "main": "build/index.js",
   "scripts": {
@@ -15,7 +18,7 @@
     "posttest": "npm run lint",
     "preinstall": "npx npm-force-resolutions",
     "postinstall": "typesync && npm install --ignore-scripts",
-    "jwt-to-env": "ls -f jwt/* | head -1 | xargs node -e \"console.log('TOKEN_CREATOR_JWT='+ require('fs').readFileSync(process.argv[1]).toString('hex'))\" && echo && echo 'Paste string above to .env and heroku config:set!'"
+    "init-dotenv": "node util/init-dotenv.js"
   },
   "repository": {
     "type": "git",

@@ -12,7 +12,7 @@ SESSION_SECRET=
 # Local database for test purpose. Use docker and local-postgres/run.sh to set up one.
 # After the first setup, run following commands to create required tables
 #     psql $DATABASE_URL < node_modules/connect-pg-simple/table.sql
-DATABASE_URL=postgres://user:pw@localhost:5432
+DATABASE_URL=postgres://postgres:pw@localhost:5432
 
 # Genete using by bcryptjs.genSaltSync()
 TOKEN_SALT=$2a$10$xxxxxxxxxxxx
