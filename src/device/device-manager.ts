@@ -10,7 +10,7 @@ type DeviceSetId = string;
 type DeviceSet = {
   deviceDefinitions: SmartHomeV1SyncDevices[];
   lastRegistration: number;
-  connection: WebSocket;
+  connection?: WebSocket;
 };
 
 const logger = log4js.getLogger('device-mgr');
@@ -74,10 +74,28 @@ export class DeviceManager {
     this.connectionToDeviceSet.delete(connection);
   }
 
-  getConnectionForDeviceId(deviceId: string) {
-    const found = [...this.deviceSets.values()].find(deviceSet =>
+  setToOffline(connection: WebSocket) {
+    const maybeOldDevSetId = this.connectionToDeviceSet.get(connection);
+    const maybeOldDevSet =
+      maybeOldDevSetId && this.deviceSets.get(maybeOldDevSetId);
+    if (maybeOldDevSet) {
+      maybeOldDevSet.connection = undefined;
+    }
+    this.connectionToDeviceSet.delete(connection);
+  }
+
+  getDeviceSetForDeviceId(deviceId: string) {
+    return [...this.deviceSets.values()].find(deviceSet =>
       deviceSet.deviceDefinitions.some(def => def.id === deviceId)
     );
-    return found?.connection;
+  }
+
+  getConnectionForDeviceId(deviceId: string) {
+    return this.getDeviceSetForDeviceId(deviceId)?.connection;
+  }
+
+  isDeviceOnline(deviceId: string) {
+    const devSet = this.getDeviceSetForDeviceId(deviceId);
+    return devSet && devSet.connection !== undefined;
   }
 }

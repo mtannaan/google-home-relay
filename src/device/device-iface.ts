@@ -7,7 +7,7 @@ import {
 } from 'actions-on-google';
 
 // import {DeviceManager} from './device-manager';
-import {DeviceManager} from '../services';
+import {DeviceManager, smartHomeIface} from '../services';
 
 const MilliSecInHour = 60 * 60 * 1000;
 const RegistrationInterval = 12 * MilliSecInHour;
@@ -94,7 +94,9 @@ export function sendExecuteMessage(
   socket.send(JSON.stringify(message));
 }
 
-export function removeOldDevices(wss: WebSocket.Server) {
+export function checkConnectionHealth(wss: WebSocket.Server) {
+  let needsRequestSync = false;
+
   wss.clients.forEach(conn => {
     const devSetId = deviceManager.connectionToDeviceSet.get(conn);
     if (!devSetId) {
@@ -108,9 +110,14 @@ export function removeOldDevices(wss: WebSocket.Server) {
       new Date().getTime() - devSet.lastRegistration >
       RegistrationInterval * (1 - GCMarginRatio)
     ) {
-      logger.debug(`removeOldDevices: ${conn.url}`);
+      logger.debug(`checkConnectionHealth: ${conn.url}`);
       conn.terminate();
-      deviceManager.remove(conn);
+      deviceManager.setToOffline(conn);
+      needsRequestSync = true;
     }
   });
+
+  if (needsRequestSync) {
+    smartHomeIface.requestSync();
+  }
 }

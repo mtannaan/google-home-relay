@@ -49,9 +49,13 @@ app.onQuery(body => {
     requestId: body.requestId,
     payload: {
       devices: new Map(
-        DeviceManager.instance
-          .getDeviceDefinitions()
-          .map(def => [def.id, {online: true, status: 'SUCCESS'}])
+        DeviceManager.instance.getDeviceDefinitions().map(def => [
+          def.id,
+          {
+            online: DeviceManager.instance.isDeviceOnline(def.id),
+            status: 'SUCCESS',
+          },
+        ])
       ),
     },
   };
