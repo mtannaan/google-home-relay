@@ -7,6 +7,7 @@ import * as accessTokens from './access_tokens';
 import * as refreshTokens from './refresh_tokens';
 import * as authorizationCodes from './authorization_codes';
 import * as scopes from './scopes';
+import * as deviceSets from './device_sets';
 
 const init = async () =>
   new Promise<Sequelize>(resolve => {
@@ -20,9 +21,14 @@ const init = async () =>
     });
 
     logger.debug('init models start');
-    [users, clients, refreshTokens, accessTokens, scopes].forEach(m =>
-      m.init(sequelize)
-    );
+    [
+      users,
+      clients,
+      refreshTokens,
+      accessTokens,
+      scopes,
+      deviceSets,
+    ].forEach(m => m.init(sequelize));
     logger.debug('init models end');
 
     resolve(sequelize);
@@ -36,5 +42,6 @@ export {
   authorizationCodes,
   refreshTokens,
   scopes,
+  deviceSets,
   init,
 };

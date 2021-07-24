@@ -24,7 +24,7 @@ import * as db from './db';
 // Routes & Sub-Apps
 import * as siteRoutes from './routes/site';
 import * as oauth2Routes from './routes/oauth2';
-import {apps} from './services';
+import {apps, DeviceManager} from './services';
 
 // ----------------------------------------------------------------------------
 // Consts and globals
@@ -148,6 +148,7 @@ server.on('upgrade', (req, socket, head) => {
 // ----------------------------------------------------------------------------
 db.init()
   .then(sequelize => sequelize.sync())
+  .then(() => DeviceManager.instance.init())
   .then(() =>
     server.listen(PORT, () =>
       log4js.getLogger('http').info(`Listening to port ${PORT}...`)

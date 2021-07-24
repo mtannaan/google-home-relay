@@ -103,7 +103,7 @@ export function checkConnectionHealth(wss: WebSocket.Server) {
       return;
     }
     const devSet = deviceManager.deviceSets.get(devSetId);
-    if (!devSet) {
+    if (!devSet || !devSet.connection) {
       return;
     }
     if (

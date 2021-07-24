@@ -4,6 +4,7 @@ import {SmartHomeV1SyncDevices} from 'actions-on-google';
 
 import {smartHomeIface} from '../services';
 import {inspect} from '../util';
+import * as deviceSetsDB from '../db/device_sets';
 
 type DeviceSetId = string;
 
@@ -30,6 +31,16 @@ export class DeviceManager {
       this._singleton = new DeviceManager();
     }
     return this._singleton;
+  }
+
+  async init() {
+    const devsets = await deviceSetsDB.getAllDeviceSets();
+    devsets.forEach(({deviceSetId, deviceDefinitions}) => {
+      this.deviceSets.set(deviceSetId, {
+        deviceDefinitions,
+        lastRegistration: new Date().getTime(),
+      });
+    });
   }
 
   getDeviceDefinitions(): SmartHomeV1SyncDevices[] {
@@ -63,9 +74,13 @@ export class DeviceManager {
       lastRegistration: new Date().getTime(),
     });
     this.connectionToDeviceSet.set(connection, deviceSetId);
+
+    deviceSetsDB.addMod(deviceSetId, deviceDefinitions);
+
     smartHomeIface.requestSync();
   }
 
+  /*
   remove(connection: WebSocket) {
     const maybeOldDevSetId = this.connectionToDeviceSet.get(connection);
     if (maybeOldDevSetId) {
@@ -73,6 +88,7 @@ export class DeviceManager {
     }
     this.connectionToDeviceSet.delete(connection);
   }
+  */
 
   setToOffline(connection: WebSocket) {
     const maybeOldDevSetId = this.connectionToDeviceSet.get(connection);
@@ -96,6 +112,10 @@ export class DeviceManager {
 
   isDeviceOnline(deviceId: string) {
     const devSet = this.getDeviceSetForDeviceId(deviceId);
-    return devSet && devSet.connection !== undefined;
+    const ret = devSet && devSet.connection !== undefined;
+    logger.debug(
+      `isDeviceOnline called with deviceId ${deviceId}, will return ${ret}`
+    );
+    return ret;
   }
 }
