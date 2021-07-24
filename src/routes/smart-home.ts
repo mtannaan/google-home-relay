@@ -49,7 +49,7 @@ app.onQuery(body => {
   const ret = {
     requestId: body.requestId,
     payload: {
-      devices: new Map(
+      devices: Object.fromEntries(
         DeviceManager.instance.getDeviceDefinitions().map(def => [
           def.id,
           {
