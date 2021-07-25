@@ -4,13 +4,14 @@ import {SmartHomeV1SyncDevices} from 'actions-on-google';
 
 import {smartHomeIface} from '../services';
 import {inspect} from '../util';
+import * as deviceSetsDB from '../db/device_sets';
 
 type DeviceSetId = string;
 
 type DeviceSet = {
   deviceDefinitions: SmartHomeV1SyncDevices[];
   lastRegistration: number;
-  connection: WebSocket;
+  connection?: WebSocket;
 };
 
 const logger = log4js.getLogger('device-mgr');
@@ -30,6 +31,16 @@ export class DeviceManager {
       this._singleton = new DeviceManager();
     }
     return this._singleton;
+  }
+
+  async init() {
+    const devsets = await deviceSetsDB.getAllDeviceSets();
+    devsets.forEach(({deviceSetId, deviceDefinitions}) => {
+      this.deviceSets.set(deviceSetId, {
+        deviceDefinitions,
+        lastRegistration: new Date().getTime(),
+      });
+    });
   }
 
   getDeviceDefinitions(): SmartHomeV1SyncDevices[] {
@@ -63,9 +74,13 @@ export class DeviceManager {
       lastRegistration: new Date().getTime(),
     });
     this.connectionToDeviceSet.set(connection, deviceSetId);
+
+    deviceSetsDB.addMod(deviceSetId, deviceDefinitions);
+
     smartHomeIface.requestSync();
   }
 
+  /*
   remove(connection: WebSocket) {
     const maybeOldDevSetId = this.connectionToDeviceSet.get(connection);
     if (maybeOldDevSetId) {
@@ -73,11 +88,34 @@ export class DeviceManager {
     }
     this.connectionToDeviceSet.delete(connection);
   }
+  */
 
-  getConnectionForDeviceId(deviceId: string) {
-    const found = [...this.deviceSets.values()].find(deviceSet =>
+  setToOffline(connection: WebSocket) {
+    const maybeOldDevSetId = this.connectionToDeviceSet.get(connection);
+    const maybeOldDevSet =
+      maybeOldDevSetId && this.deviceSets.get(maybeOldDevSetId);
+    if (maybeOldDevSet) {
+      maybeOldDevSet.connection = undefined;
+    }
+    this.connectionToDeviceSet.delete(connection);
+  }
+
+  getDeviceSetForDeviceId(deviceId: string) {
+    return [...this.deviceSets.values()].find(deviceSet =>
       deviceSet.deviceDefinitions.some(def => def.id === deviceId)
     );
-    return found?.connection;
+  }
+
+  getConnectionForDeviceId(deviceId: string) {
+    return this.getDeviceSetForDeviceId(deviceId)?.connection;
+  }
+
+  isDeviceOnline(deviceId: string) {
+    const devSet = this.getDeviceSetForDeviceId(deviceId);
+    const ret = devSet && devSet.connection !== undefined;
+    logger.debug(
+      `isDeviceOnline called with deviceId ${deviceId}, will return ${ret}`
+    );
+    return ret;
   }
 }

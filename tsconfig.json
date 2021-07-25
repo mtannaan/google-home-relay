@@ -3,7 +3,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "build",
-    "allowJs": true
+    "allowJs": true,
+    "lib": [
+      "ES2019"
+    ]
   },
   "include": [
     "src/**/*.ts",

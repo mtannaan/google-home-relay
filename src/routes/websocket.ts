@@ -64,7 +64,7 @@ wss.on('connection', (ws: WebSocketWithIsAlive, request) => {
 });
 
 const autoRemoveTimer = setInterval(
-  () => deviceIface.removeOldDevices(wss),
+  () => deviceIface.checkConnectionHealth(wss),
   deviceAutoRemoveInterval
 );
 wss.on('close', () => clearInterval(autoRemoveTimer));

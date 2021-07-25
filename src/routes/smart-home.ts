@@ -45,16 +45,23 @@ app.onSync(body => {
 // https://developers.google.com/assistant/smarthome/reference/intent/query
 app.onQuery(body => {
   // TODO: get user ID from headers
-  return {
+  logger.debug('QUERY received');
+  const ret = {
     requestId: body.requestId,
     payload: {
-      devices: new Map(
-        DeviceManager.instance
-          .getDeviceDefinitions()
-          .map(def => [def.id, {online: true, status: 'SUCCESS'}])
+      devices: Object.fromEntries(
+        DeviceManager.instance.getDeviceDefinitions().map(def => [
+          def.id,
+          {
+            online: DeviceManager.instance.isDeviceOnline(def.id),
+            status: 'SUCCESS',
+          },
+        ])
       ),
     },
   };
+  logger.debug(`will return: ${inspect(ret)}`);
+  return ret;
 });
 
 app.onExecute(body => {
