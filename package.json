@@ -65,7 +65,7 @@
     "typesync": "^0.8.0"
   },
   "dependencies": {
-    "actions-on-google": "^2.14.0",
+    "actions-on-google": "^3.0.0",
     "axios": "^0.21.2",
     "bcryptjs": "^2.4.3",
     "bufferutil": "^4.0.3",
